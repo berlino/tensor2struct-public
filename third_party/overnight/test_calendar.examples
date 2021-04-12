@@ -1,0 +1,2 @@
+(call edu.stanford.nlp.sempre.overnight.SimpleWorld.listValue ( call edu.stanford.nlp.sempre.overnight.SimpleWorld.getProperty ( call edu.stanford.nlp.sempre.overnight.SimpleWorld.singleton en.meeting.weekly_standup ) ( string start_time ) ) )
+(call edu.stanford.nlp.sempre.overnight.SimpleWorld.listValue ( call edu.stanford.nlp.sempre.overnight.SimpleWorld.getProperty ( call edu.stanford.nlp.sempre.overnight.SimpleWorld.singleton en.meeting.weekly_standup ) ( string date ) ) )

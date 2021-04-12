@@ -1,0 +1,24 @@
+__pycache__/
+.vscode/
+.DS_Store
+*.swp
+*.pyc
+
+# temp dir
+data/
+log/
+ie_dir/
+jobs/
+
+# cache
+.vector_cache
+tensor2struct.egg-info/
+.ipynb_checkpoints/
+build/
+dist/
+wandb/
+nohup/
+slurm_outputs/
+
+# third_party
+third_party/mosesdecoder
