@@ -1,0 +1,338 @@
+Paper story:
+- Most semantic parsers are trained from a large number of utterances paired
+  with logical forms or denotations.
+- We are interested in settings where you want to build a natural language
+  interface for a new domain (calendaring).
+  You have zero training data, but you do have a logical specification of the
+  functionality.  How can we build a semantic parser into in 1 hour?
+- We want to factor out the domain-general parts (which captures general
+  properties about language and semantic parsing) from the domain-specific
+  parts (which are necessary for the given domain).
+  We separate each into logical compositionality and paraphrasing.
+  Thus there are four components:
+  - Domain-specific seed lexicon: canonical way to express logical predicates (5 minutes)
+  - Domain-general canonical grammar: generates compositional logical forms
+  - Domain-general paraphrasing: defines general model using vector space models, PPDB
+  - Domain-specific paraphrasing: crowdsource minimal units to learn compositionality (55 minutes)
+- We learn on 10 domains, and show we can get competitive state-of-the-art
+  results on existing datasets and extend to many new datasets.
+- Evaluation
+  * Existing datasets (Geo880, Regex)
+  * User study (interact with system and rate it)
+
+Key scientific questions:
+- Can logical forms be realized compositionally in a canonical natural language
+  form which is fluent and preserves the semantics?
+  Answer: we categorize the different ways semantics is realized (relational nouns, generalized verbs, and frames)
+- In what other ways are domain items expressed?  How compositional are the
+  paraphrases (how many rules do they encompass) and how context-sensitive are
+  they?
+  Answer: we only need to consider two relations at a time to learn everything
+
+------------------------------------------------------------
+
+Domain-general grammar for defining set of logical forms.
+
+The grammar categories with suffixed numbers (e.g. $S0) are used for generation
+and correspond to a limited depth.
+
+# Lexicon
+$TypeNP     ::= person | appliance | number | date | time | ...            # type (abstract entity, which can be argument to fb:type.object.type)
+$RelNP      ::= population | parent | ...                                  # relational noun (binary predicate)
+$Arg0RelNP  ::= student                                                    # arg0 relational noun (binary predicate between event and agent)
+$VP/NP      ::= borders | contains | is left of | has a child named | ...  # transitive verb (binary predicate between subject and object)
+$ImpVP/NP   ::= show me | mix | transfer | ...                             # imperative transitive verb (for top-level actions)
+$VP         ::= allows cats | has a private bath | is part-time | ...      # verb phrase (unary predicate)
+
+# Base noun phrase (which denotes a set)
+$NP         ::= $EntityNP      => $EntityNP
+$NP         ::= DT $TypeNP     => (type $TypeNP)
+$NP         ::= $RelNP         => ((reverse $RelNP) fb:type.any)
+
+# Complementizer phrase (filtering)
+$CP ::= whose $RelNP is [|not|less than|greater than|at most|at least] $NP  => ($RelNP (=|<|>|<=|>= $NP))   # whose parent is John
+$CP ::= that is $RelNP of $NP                                               => ((reverse $RelNP) $NP)       # that is parent of John
+$CP ::= that $VP/NP $NP                                                     => ($VP/NP $NP)                 # that founded Google
+$CP ::= that $NP $VP/NP                                                     => ((reverse $VP/NP) $NP)       # that Page founded
+$CP ::= that $VP                                                            => $VP                          # that is non-stop
+$CP0 ::= ($CP above where $NP is replaced with $EntityNP)
+$CP1 ::= ($CP above where $NP is replaced with $NP0)
+
+# Relative clauses (superlatives)
+$CP := that has the smallest|largest $RelNP               => (lambda x (argmin|argmax 1 1 (var x) $RelNP))
+$CP := that has the least|most $RelNP                     => (lambda x (argmin|argmax 1 1 (var x) (reverse (lambda y (count ((reverse $RelNP) (var y)))))))
+$CP := that $VP/NP the least|most $NP                     => (lambda x (argmin|argmax 1 1 (var x) (reverse (lambda y (count (and ((reverse $VP/NP) (var y)) $NP))))))
+$CP1 ::= ($CP above where $NP is replaced with $TypeNP)
+
+# Construct NPs from CPs
+$NP ::= $TypeNP $CP (and $CP)*                            => (and $NP $CP $CP*)           # person whose parent is John and whose child is Alice
+$NP0 ::= $TypeNP $CP0
+$NP1 ::= $TypeNP $CP1
+$NP1 ::= $TypeNP $CP0 and $CP0
+
+# Transformations
+$InjectCP ::= with $RelNP $NP (and with $RelNP $NP)*   => (and ($RelNP $NP) ...)                                      # with date 2000
+$NP ::= $RelNP of $NP                                  => ((reverse $RelNP) $NP)                                      # parent of John
+$NP ::= $RelNP of $Arg0RelNP $EntityNP $InjectCP?      => ((reverse $RelNP) (and ($Arg0RelNP $EntityNP) $InjectCP))   # educational institution of student John with date 2000
+$NP ::= $Arg0RelNP $InjectCP?                          => ((reverse $Arg0RelNP) $InjectCP)                            # student with educational institution Stanford and with date 2000
+$NP ::= $NP or $NP                                     => (or $NP $NP)                                                # alice or bob
+$NP ::= $NP $NP\(NP/NP) $NP                            => (($NP\(NP/NP) $NP) $NP)                                     # three plus four
+$NP0 ::= ($NP where $NP is replaced with $EntityNP, only one $InjectCP)
+
+# Aggregation
+$NP ::= number of $NP                                  => (count $NP)                                                 # number of person
+$NP ::= total $RelNP of $NP                            => (sum ((reverse $RelNP) $NP))                                # total population of country
+$NP1 ::= ($NP where $NP is replaced with $TypeNP)
+
+# Sentence-level
+$S ::= $ImpVP/NP $NP $InjectCP?                => (and (type $ImpVP/NP) (theme $NP) $InjectCP?)                       # move pot with destination stove
+$S ::= $S when|before|after|while|until $S     => (and ((reverse time) $S) (TIME_COMPARE ((reverse time) $S)))        # open door when doorbell rings
+$S ::= $S if there exists $NP                  => (or $S (not $NP))                                                   # open door if there exists person whose location is door
+$S0 ::= $ImpVP/NP $NP0
+$S1 ::= $ImpVP/NP $NP0 $InjectCP
+$S1 ::= $ImpVP/NP $NP1
+
+# Check that things like 'mother' are covered.
+
+------------------------------------------------------------
+
+Domains
+  Database queries
+    Housing (http://sfbay.craigslist.org/search/apa)
+      $TypeNP: housing unit
+        $RelNP: rent in dollars per month, location, housing type, open house date, size in square feet, posting date
+        $VP: has an image, allows cats, allows dogs, has a private bath
+      Example: show me any housing unit whose housing type is apartment and whose size in square feet is at least 100
+    Restaurants (http://www.yelp.com/search?find_desc=food)
+      $TypeNP: restaurant
+        $RelNP: cuisine, number of dollar signs, address, neighborhood, number of reviews, star rating
+        $VP: takes reservations, accepts credit cards, has outdoor seating, is good for kids, has take-out
+        $VP/NP: serves[meal]
+    Recipes (allrecipes.com)
+      $TypeNP: recipe
+        $RelNP: preparation time, cooking time, dish type
+        $VP/NP: uses[ingredient], is for[meal]
+      Example: show me any recipe that uses chicken and that is for dinner
+    Flights, hotels, rental cars (kayak.com)
+      $TypeNP: flight
+        $RelNP: starting city, destination city, departure time, arrival time, price
+        $NP/VP: serves[meal]
+        $VP: is non-stop
+    Jobs (indeed.com, Jobs640 dataset)
+      http://www.indeed.com/advanced_search
+      $TypeNP: job posting
+        $RelNP: posting company, salary, location, posting date
+        $NP/VP: require[skill]
+      skill
+    Publications (scholar.google.com)
+      $TypeNP: publication
+        $RelNP: venue, author[person], published date, subject
+      Example: show me any venue of any publication whose author is Fred
+    Freebase
+      $TypeNP: movie
+        $RelNP: director[person], producer[person]
+        $VP/NP: won[award]
+      $TypeNP: person
+        $RelNP: child, place of birth, place of death, date of birth, date of death, country of nationality, ethnicity, gender, profession, height, weight
+      $TypeNP: marriage
+        $RelNP: participant, marriage ceremony location, marriage start date, marriage end date
+      $TypeNP: performance
+        $RelNP: actor[person], movie, role
+      education event (frame)
+        $RelNP: student, educational instuition, earned degree, start date, end date
+      population measurement (frame)
+        $RelNP: location, population, date, source
+      governing event (frame)
+        $RelNP: person, position, date range
+        person whose position is president whose date range overlaps with the date range of world war 2 => president during world war 2
+      Example: show me any person that attended Stanford with start date 2000
+      Example: show me any person that starred in Titanic with role Jack
+      Example: show me any person that is a participant of any marriage whose participant is Tom Cruise
+      Example: show me the population value of the population measurement whose location is China and whose date is 2000
+    Basketball statistics
+      $TypeNP: performance
+        $RelNP: player, team, number of rebounds per game, number of scored points, year
+      Example: show me any person that is the player of a performance whose number of rebounds per game is 10
+      Example: number of rebounds per game of Michael Jordan with team Bulls and date 1995
+    Paleobiology
+      $TypeNP: geological period
+      $TypeNP: species
+      $TypeNP: occurrence
+        $RelNP: species, geological period, country (where occurrence was found)
+    Products (amazon.com) -- too broad probably
+    Genes/drugs
+    Weather
+      $TypeNP: forecast
+        $RelNP: location, high temperature, low temperature, humidity, chance of rain, chance of snow, wind speed, date, time
+      Example: show me the high temperature of location New York with time 5pm
+    Calendar
+      $TypeNP: meeting
+        $RelNP: start time, end time, date, subject, attendee[person], location
+      $TypeNP: free block
+        $RelNP: start time, end time, date
+    Email
+      $TypeNP: message
+        $RelNP: sender, receiver, date, time, subject, cc'ed email, bcc'ed email
+    Maps/directions (maps.google.com)
+      $TypeNP: route
+        $RelNP: starting point, destination point, mode of transportation, distance, time
+      Example: destination point of route whose starting point is X and whose distance is less than 10 miles
+  Computation
+    Regular expressions
+      $TypeNP: string
+        $VP/NP: contains, starts with, ends with
+        $NP\(NP/NP): before, after, concatenated to
+        $VP: is uppercase, is capitalized, is a letter, is a digit
+  Actions
+    Phone
+      $ImpVP/NP: set
+        $RelNP: property, value
+      $S/NP: set the alarm
+    Smart homes
+      $TypeNP: light
+        $NP: location[room]
+      $TypeNP: room
+      Example:
+        turn off the light whose location is kitchen when turn off stove
+    Unix
+      $TypeNP: file
+        $RelNP: name, size, owner
+        $VP/NP: contains
+      $ImpVP/NP: delete (frame)
+        file(theme)
+      $ImpVP/NP: rename (frame)
+        file(theme), name(goal)
+    Cooking
+      $ImpVP/NP: mix
+        ingredient(arg1), location, instrument
+      $ImpVP/NP: transfer
+        ingredient(arg1), destination, instrument
+      $ImpVP/NP: turn on|off
+        appliance(arg1)
+      $ImpVP/NP: send
+        agent, theme, time, date
+      Example:
+        transfer egg with destination bowl => put the egg in the bowl
+  Declarative sentences (future work)
+
+------------------------------------------------------------
+
+Phenomena
+
+- Simplification of predicates (involves one rule)
+  apartment whose rent is 1000 => apartment for 1000 # NP/VP => preposition
+  person that is any founder of X => person that founded Y # NP => NP/VP
+  block whose color is blue => blue block
+  restaurant whose number of dollar signs is 1 => restaurant with 1 dollar signs
+  apartment whose housing type is condo => condo # collapse
+  person that directed anything => director # collapse
+  apartment whose rent is the smallest => cheapest apartment # superlative
+  apartment whose rent is less than 2000 => apartment for under 2000 # comparative
+  flight that is not non-stop => flight with a layover # negation
+
+- Sub-lexical compositionality (involves multiple rules)
+  parent of Fred whose gender is female => Fred's mother # collapse
+  any venue of any publication whose author is Fred => places that Fred has published # join
+  meeting whose end time is the start time of a free block => meeting followed by a free block # join
+  person that is author of any paper whose author is Fred => co-author of Fred # transitive, same word
+  meeting whose start time is 3pm and whose end time is 5pm => meetings between 3pm and 5pm # conjunction
+
+- Actions (involves rule at the top, some pragmatics)
+  show me the price of X => how much does X cost?
+  show me the birth of place of X => where was X born?
+  what is the currency of X => what money do they use in X?
+  show me the flight whose destination city is X => I want to fly to X
+  show me the height of X => how tall is X?
+
+Learn rewrite rules
+  $Set whose color is $Entity[blue] => $Entity $Set
+
+Criticisms (need to defend)
+- Free917 work already tackled generalization across domain (stress compositionality)
+- Limited to specified logical compositionality (say this is much more than previous work)
+- Evaluation very biased (get good results on Geo)
+- A lot of work on building configurable NLIDB in old days (make sure cite these)
+- wit.ai
+
+------------------------------------------------------------
+Looking for minimal non-compositional paraphrases in GeoQuery (scratch area)
+
+what is the highest point in florida
+place whose location is florida with the largest elevation
+
+what are the high points of states surrounding mississippi
+what is the high point of the state that borders mississippi
+
+what state has the shortest river
+what is the state that contains the river with the smallest length
+
+name all the lakes of us
+show me lake that united states contains
+
+what is the highest mountain in alaska
+show me mountain that alaska contains that has the largest elevation
+
+what is the population of illinois
+show me population of illinois
+
+name all the rivers in colorado
+show me river that colorado contains
+
+in which state does the highest point in usa exist
+show me state that contains place that has largest elevation
+
+which state is the city denver located in
+show me state that contains denver
+
+----------------------
+regex
+
+Generalized types: lines, words, numbers, do we want also strings? (lines that contain string that is word "hello")
+types: words, numbers, "hello", the word "hello", vowels, digits, lower case...
+tokens: particular instances
+
+How do we split the types and keep consistent with previous grammar? we can hack
+stuff like we did for previous domains.
+
+modifiers:
+contain(s) --> .*(var s).*
+start(s) --> (var s).*
+end(s) --> .*(var s)
+is_word (s) --> \\b[a-zA-Z]+&(var s)\\b
+is_number(s) --> \\b[0-9]+&(var s)\\b
+is_character(s) --> .&(var s)
+
+before/after(np1,np2)--> np1.*np2/np2.*np1
+contain at least/at most $Num $Type - that's the only place where we need quoted
+strings to be TypeNP
+
+
+What about:
+negation of modifiers (not in general grammar right now)
+start with at least two words: "(\\b[a-zA-Z]+\\b.*){2,}" - this is not correct
+"number of"/"total" is irrelevant
+"line that is at least three vowels"
+what about start of line and end of line?
+
+Geo conversions:
+what states have rivers named colorado
+(and (fb:type.object.type fb:location.us_state) ((reverse
+fb:geography.river.traverses) (and (fb:type.object.name (!fb:type.object.name
+fb:en.colorado)) (fb:type.object.type fb:geography.river))))
+
+what state has highest elevation: no elevation for states
+(argmax (number 1) (number 1) (fb:type.object.type fb:location.us_state)
+(reverse !fb:geography.mountain.elevation))
+
+what are the major cities in delaware: no area property for city
+(and (and (fb:location.location.area (>= 200)) (fb:type.object.type
+fb:location.citytown)) (fb:location.location.containedby fb:en.delaware))
+
+what is the biggest city in wyoming: biggest city is less than 100k
+
+what is the area of the states: did not put the states in the kb
+
+what is the biggest river in illinois: area or length?
+(argmax (number 1) (number 1) (and (fb:type.object.type fb:geography.river)
+(fb:geography.river.traverses fb:en.illinois)) (reverse
+!fb:location.location.area))

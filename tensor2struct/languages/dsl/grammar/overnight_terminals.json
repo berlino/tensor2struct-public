@@ -1,0 +1,344 @@
+{
+    "domain_terminals": {
+        "calendar": {
+            "value": {
+                "singleton": [
+                    "en.meeting",
+                    "en.person",
+                    "en.location"
+                ],
+                "entity": [
+                    "en.meeting.weekly_standup",
+                    "en.meeting.annual_review",
+                    "en.person.alice",
+                    "en.person.bob",
+                    "en.location.greenberg_cafe",
+                    "en.location.central_office"
+                ],
+                "time": [
+                    "time 10 0",
+                    "time 15 0"
+                ],
+                "date": [
+                    "date 2015 1 2",
+                    "date 2015 1 3"
+                ],
+                "number": [
+                    "number 3 en.hour",
+                    "number 1 en.hour",
+                    "number 2"
+                ]
+            },
+            "property": [
+                "date",
+                "start_time",
+                "end_time",
+                "length",
+                "attendee",
+                "location",
+                "is_important"
+            ]
+        },
+        "blocks": {
+            "value": {
+                "singleton": [
+                    "en.block", 
+                    "en.shape", 
+                    "en.color"
+                ],
+                "entity": [
+                    "en.block.block1",
+                    "en.block.block2",
+                    "en.shape.pyramid",
+                    "en.shape.cube",
+                    "en.color.red",
+                    "en.color.green"
+                ],
+                "number": [
+                    "number 3 en.inch",
+                    "number 6 en.inch",
+                    "number 2"
+                ]
+            },
+            "property": [
+                "shape",
+                "color",
+                "length",
+                "width",
+                "height",
+                "left",
+                "right",
+                "above",
+                "below",
+                "is_special"
+            ]
+        },
+        "housing": {
+            "value": {
+                "singleton": [
+                    "en.housing_unit",
+                    "en.housing",
+                    "en.neighborhood"
+                ],
+                "entity": [
+                    "en.housing_unit.123_sesame_street",
+                    "en.housing_unit.900_mission_ave",
+                    "en.housing.apartment",
+                    "en.housing.condo",
+                    "en.housing.house",
+                    "en.housing.flat",
+                    "en.neighborhood.tribeca",
+                    "en.neighborhood.midtown_west",
+                    "en.neighborhood.chelsea"
+                ],
+                "number": [
+                    "number 1500 en.dollar",
+                    "number 2000 en.dollar",
+                    "number 800 en.square_feet",
+                    "number 1000 en.square_feet",
+                    "number 2"
+                ],
+                "date": [
+                    "date 2015 1 2",
+                    "date 2015 2 3"
+                ]
+            },
+            "property": [
+                "rent",
+                "size",
+                "posting_date",
+                "neighborhood",
+                "housing_type",
+                "allows_cats",
+                "allows_dogs",
+                "has_private_bath",
+                "has_private_room"
+            ]
+        },
+        "recipes": {
+            "value": {
+                "singleton": [
+                    "en.recipe",
+                    "en.cuisine",
+                    "en.ingredient",
+                    "en.meal"
+                ],
+                "entity": [
+                    "en.recipe.rice_pudding",
+                    "en.recipe.quiche",
+                    "en.cuisine.chinese",
+                    "en.cuisine.french",
+                    "en.ingredient.milk",
+                    "en.ingredient.spinach",
+                    "en.meal.lunch",
+                    "en.meal.dinner"
+                ],
+                "number": [
+                    "number 10 en.minute",
+                    "number 300 en.minute",
+                    "number 2"
+                ],
+                "date": [
+                    "date 2004 -1 -1",
+                    "date 2010 -1 -1"
+                ]
+            },
+            "property": [
+                "preparation_time",
+                "cooking_time",
+                "cuisine",
+                "requires",
+                "meal",
+                "posting_date"
+            ]
+        },
+        "restaurants": {
+            "value": {
+                "singleton": [
+                    "en.restaurant",
+                    "en.food",
+                    "en.cuisine",
+                    "en.neighborhood"
+                ],
+                "entity": [
+                    "en.restaurant.thai_cafe", 
+                    "en.restaurant.pizzeria_juno",
+                    "en.cuisine.thai",
+                    "en.cuisine.french",
+                    "en.cuisine.italian",
+                    "en.food.breakfast",
+                    "en.food.lunch",
+                    "en.food.dinner",
+                    "en.neighborhood.tribeca",
+                    "en.neighborhood.midtown_west",
+                    "en.neighborhood.chelsea"
+                ],
+                "number": [
+                    "number 2 en.dollar_sign",
+                    "number 3 en.dollar_sign",
+                    "number 30 en.review",
+                    "number 40 en.review",
+                    "number 3 en.star",
+                    "number 5 en.star",
+                    "number 2"
+                ]
+            },
+            "property": [
+                "star_rating",
+                "price_rating",
+                "num_reviews",
+                "neighborhood",
+                "cuisine",
+                "meals",
+                "reserve",
+                "credit",
+                "outdoor",
+                "takeout",
+                "delivery",
+                "waiter",
+                "kids",
+                "groups"
+            ]
+        },
+        "socialnetwork": {
+            "value": {
+                "singleton": [
+                    "en.person",
+                    "en.gender",
+                    "en.relationship_status",
+                    "en.city",
+                    "en.university",
+                    "en.field",
+                    "en.company",
+                    "en.job_title"
+                ],
+                "entity": [
+                    "en.person.alice",
+                    "en.person.bob",
+                    "en.gender.male",
+                    "en.gender.female",
+                    "en.relationship_status.single",
+                    "en.relationship_status.married",
+                    "en.city.new_york",
+                    "en.city.beijing",
+                    "en.university.brown",
+                    "en.university.berkeley",
+                    "en.university.ucla",
+                    "en.field.computer_science",
+                    "en.field.economics",
+                    "en.field.history",
+                    "en.company.google",
+                    "en.company.mckinsey",
+                    "en.company.toyota",
+                    "en.job_title.ceo",
+                    "en.job_title.software_engineer",
+                    "en.job_title.program_manager"
+                ],
+                "number": [
+                    "number 180 en.cm",
+                    "number 200 en.cm",
+                    "number 2"
+                ],
+                "date": [
+                    "date 2004 -1 -1",
+                    "date 2010 -1 -1"
+                ]
+            },
+            "property": [
+                "gender",
+                "relationship_status",
+                "height",
+                "birthdate",
+                "birthplace",
+                "friend",
+                "logged_in",
+                "student",
+                "university",
+                "field_of_study",
+                "education_start_date",
+                "education_end_date",
+                "employee",
+                "employer",
+                "job_title",
+                "employment_start_date",
+                "employment_end_date"
+            ]
+        },
+        "publications": {
+            "value": {
+                "singleton": [
+                    "en.article",
+                    "en.person",
+                    "en.venue"
+                ],
+                "entity": [
+                    "en.article.multivariate_data_analysis",
+                    "en.person.efron",
+                    "en.person.lakoff",
+                    "en.venue.computational_linguistics",
+                    "en.venue.annals_of_statistics"
+                ],
+                "number": [
+                    "number 2"
+                ],
+                "date": [
+                    "date 2004 -1 -1",
+                    "date 2010 -1 -1"
+                ]
+            },
+            "property": ["author", "venue", "publication_date", "cites", "won_award"]
+        },
+        "basketball": {
+            "value": {
+                "singleton": [
+                    "en.player",
+                    "en.team",
+                    "en.position"
+                ],
+                "entity": [
+                    "en.player.kobe_bryant",
+                    "en.player.lebron_james",
+                    "en.team.lakers",
+                    "en.team.cavaliers",
+                    "en.position.point_guard",
+                    "en.position.forward"
+                ],
+                "number": [
+                    "number 3 point",
+                    "number 3 assist",
+                    "number 3 steal",
+                    "number 3 turnover",
+                    "number 3 rebound",
+                    "number 3 block",
+                    "number 3 foul",
+                    "number 3 game",
+                    "number 2"
+                ],
+                "date": [
+                    "date 2004 -1 -1",
+                    "date 2010 -1 -1"
+                ]
+            },
+            "property": [
+                "player", 
+                "position", 
+                "team", 
+                "season",
+                "num_points",
+                "num_assists",
+                "num_steals",
+                "num_turnovers",
+                "num_rebounds",
+                "num_blocks",
+                "num_fouls",
+                "num_games_played"
+            ]
+        }
+    },
+    "general_types": ["!type"],
+    "general_terminals": {
+        "agg": ["max", "min", "sum", "avg"],
+        "op": ["=", ">", "<", ">=", "<=", "!="]
+    },
+    "terminal_types": ["string", "number", "date", "time"]
+}
