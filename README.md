@@ -2,9 +2,9 @@
 
 tensor2struct is a package contains a set of neural semantic parsers based on encoder-decoder framework. Currently, it contains the code and data for the following papers:
 
-* Meta-Learning for Domain Generalization in Semantic Parsing, NAACL 2021
-* Learning from Executions for Semantic Parsing, NAACL 2021
-* Learning to Synthesize Data for Semantic Parsing, NAACL 2021
+* [Meta-Learning for Domain Generalization in Semantic Parsing, NAACL 2021](https://arxiv.org/abs/2010.11988)
+* [Learning from Executions for Semantic Parsing, NAACL 2021](https://arxiv.org/abs/2104.05819)
+* [Learning to Synthesize Data for Semantic Parsing, NAACL 2021](https://arxiv.org/abs/2104.05827)
 
 
 ## Setup
