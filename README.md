@@ -33,6 +33,6 @@ Make `log/` and `ie_dir/` which will be used for storing checkpoints and predict
 * [Learning to Synthesize Data for Semantic Parsing](experiments/sql2nl/)
 
 
-## Acknowledge
+## Acknowledgement
 
 Tensor2struct is a generalization of [RAT-SQL](https://github.com/microsoft/rat-sql).
