@@ -1,10 +1,12 @@
 # Tensor2Struct 
 
-tensor2struct is a package contains a set of neural semantic parsers based on encoder-decoder framework. Currently, it contains the code and data for the following papers:
+tensor2struct is a package that contains a set of neural semantic parsers based on the encoder-decoder framework. Currently, it supports the following datasets:
 
-* [Meta-Learning for Domain Generalization in Semantic Parsing, NAACL 2021](https://arxiv.org/abs/2010.11988)
-* [Learning from Executions for Semantic Parsing, NAACL 2021](https://arxiv.org/abs/2104.05819)
-* [Learning to Synthesize Data for Semantic Parsing, NAACL 2021](https://arxiv.org/abs/2104.05827)
+* Overnight 
+* Spider
+* Chinese Spider
+* SCAN
+* COGS
 
 
 ## Setup
@@ -28,9 +30,76 @@ Make `log/` and `ie_dir/` which will be used for storing checkpoints and predict
 
 ##  Experiments
 
+To run experiments in a paticular paper, please see the corresponding directory listed below for detailed instructions. 
+
 * [Meta-Learning for Domain Generalization](experiments/spider_dg/)
 * [Learning from Executions for Semantic Parsing](experiments/semi_sup/)
 * [Learning to Synthesize Data for Semantic Parsing](experiments/sql2nl/)
+* [Meta-Learning to Compositionally Generalize](experiments/comp_maml)
+
+## Citations
+
+If you use tensor2struct, please cite one of the following papers.
+
+* [Meta-Learning for Domain Generalization in Semantic Parsing, NAACL 2021](https://arxiv.org/abs/2010.11988)
+
+``` bibtex
+@inproceedings{wang-etal-2021-meta,
+    title = "Meta-Learning for Domain Generalization in Semantic Parsing",
+    author = "Wang, Bailin  and
+      Lapata, Mirella  and
+      Titov, Ivan",
+    booktitle = "Proceedings of the 2021 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies",
+    month = jun,
+    year = "2021",
+    address = "Online",
+    publisher = "Association for Computational Linguistics",
+    url = "https://www.aclweb.org/anthology/2021.naacl-main.33",
+    doi = "10.18653/v1/2021.naacl-main.33",
+    pages = "366--379",
+}
+```
+
+* [Learning from Executions for Semantic Parsing, NAACL 2021](https://arxiv.org/abs/2104.05819)
+
+``` bibtex
+@inproceedings{wang-etal-2021-learning-executions,
+    title = "Learning from Executions for Semantic Parsing",
+    author = "Wang, Bailin  and
+      Lapata, Mirella  and
+      Titov, Ivan",
+    booktitle = "Proceedings of the 2021 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies",
+    month = jun,
+    year = "2021",
+    address = "Online",
+    publisher = "Association for Computational Linguistics",
+    url = "https://www.aclweb.org/anthology/2021.naacl-main.219",
+    doi = "10.18653/v1/2021.naacl-main.219",
+    pages = "2747--2759",
+}
+```
+
+* [Learning to Synthesize Data for Semantic Parsing, NAACL 2021](https://arxiv.org/abs/2104.05827)
+
+``` bibtex
+@inproceedings{wang-etal-2021-learning-synthesize,
+    title = "Learning to Synthesize Data for Semantic Parsing",
+    author = "Wang, Bailin  and
+      Yin, Wenpeng  and
+      Lin, Xi Victoria  and
+      Xiong, Caiming",
+    booktitle = "Proceedings of the 2021 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies",
+    month = jun,
+    year = "2021",
+    address = "Online",
+    publisher = "Association for Computational Linguistics",
+    url = "https://www.aclweb.org/anthology/2021.naacl-main.220",
+    doi = "10.18653/v1/2021.naacl-main.220",
+    pages = "2760--2766",
+}
+```
+
+* [Meta-Learning to Compositionally Generalize, ACL 2021](https://arxiv.org/abs/2106.04252)
 
 
 ## Acknowledgement

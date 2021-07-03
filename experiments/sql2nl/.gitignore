@@ -1,0 +1,12 @@
+gpt2-bpe/
+data/
+data-*/
+data-spider-with-ssp/
+data-spider-with-ssp-synthetic/
+data-spider-with-ssp-bin/
+data-spider-with-ssp-bin/
+data-spider-without-ssp-bin/
+data-ssp-synthetic/
+checkpoints/
+checkpoints-*/
+predictions/
