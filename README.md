@@ -101,6 +101,24 @@ If you use tensor2struct, please cite one of the following papers.
 
 * [Meta-Learning to Compositionally Generalize, ACL 2021](https://arxiv.org/abs/2106.04252)
 
+``` bibtex
+@inproceedings{conklin-etal-2021-meta,
+    title = "Meta-Learning to Compositionally Generalize",
+    author = "Conklin, Henry  and
+      Wang, Bailin  and
+      Smith, Kenny  and
+      Titov, Ivan",
+    booktitle = "Proceedings of the 59th Annual Meeting of the Association for Computational Linguistics and the 11th International Joint Conference on Natural Language Processing (Volume 1: Long Papers)",
+    month = aug,
+    year = "2021",
+    address = "Online",
+    publisher = "Association for Computational Linguistics",
+    url = "https://aclanthology.org/2021.acl-long.258",
+    doi = "10.18653/v1/2021.acl-long.258",
+    pages = "3322--3335",
+    abstract = "Natural language is compositional; the meaning of a sentence is a function of the meaning of its parts. This property allows humans to create and interpret novel sentences, generalizing robustly outside their prior experience. Neural networks have been shown to struggle with this kind of generalization, in particular performing poorly on tasks designed to assess compositional generalization (i.e. where training and testing distributions differ in ways that would be trivial for a compositional strategy to resolve). Their poor performance on these tasks may in part be due to the nature of supervised learning which assumes training and testing data to be drawn from the same distribution. We implement a meta-learning augmented version of supervised learning whose objective directly optimizes for out-of-distribution generalization. We construct pairs of tasks for meta-learning by sub-sampling existing training data. Each pair of tasks is constructed to contain relevant examples, as determined by a similarity metric, in an effort to inhibit models from memorizing their input. Experimental results on the COGS and SCAN datasets show that our similarity-driven meta-learning can improve generalization performance.",
+}
+```
 
 ## Acknowledgement
 
