@@ -194,3 +194,59 @@ class UnBatchedEncDecModel(torch.nn.Module):
         enc_input, _ = preproc_item
         enc_state = self.encoder(enc_input)
         return self.decoder(orig_item, enc_state, compute_loss=False, infer=True)
+
+
+@registry.register("model", "EncDec")
+class BatchedEncDecModel(SemiBatchedEncDecModel):
+    Preproc = EncDecPreproc
+
+    def __init__(self, preproc, device, encoder, decoder):
+        super().__init__(preproc, device, encoder, decoder)
+        assert getattr(self.encoder, "batched") and getattr(self.decoder, "batched")
+
+    def forward(self, input_batch, compute_loss=True, infer=False):
+        """
+        The only entry point of encdec. In this batched version, training 
+        and inference also takes a preprocessed input batch
+
+        Args:
+            input_batch: for training, it contains both input and output; for decoding,
+                it only contains input
+        """
+        ret_dic = {}
+        if compute_loss:
+            loss = self.compute_loss_batched(input_batch)
+            ret_dic["loss"] = loss
+        if infer:
+            infer_dic = self.begin_batched_inference(input_batch)
+            ret_dic = {**ret_dic, **infer_dic}
+        return ret_dic
+
+    def compute_loss_batched(self, batch):
+        enc_batch = [enc_input for enc_input, dec_output in batch]
+        dec_batch = [dec_output for enc_input, dec_output in batch]
+        enc_state = self.encoder(enc_batch)
+        ret_dic = self.decoder(dec_batch, enc_state)
+
+        # encoder might have some auxilary loss
+        if getattr(enc_state, "enc_loss", None):
+            return ret_dic["loss"] + enc_state.enc_loss
+        else:
+            return ret_dic["loss"]
+
+    def begin_batched_inference(self, enc_batch):
+        """
+        Unlike UnbatchedEncDec, enc_batch does not contain orig_items now. This
+        might need to be supported in the future
+        """
+        enc_state = self.encoder(enc_batch)
+        return self.decoder(None, enc_state, compute_loss=False, infer=True)
+
+    def begin_inference(self, orig_item, preproc_item):
+        """
+        This function will be used in unbatched inference methods, such 
+        as unbatched beam search
+        """
+        enc_input, _ = preproc_item
+        enc_state = self.encoder([enc_input])
+        return self.decoder.begin_inference(orig_item, enc_state)
