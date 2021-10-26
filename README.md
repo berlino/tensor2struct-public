@@ -36,6 +36,7 @@ To run experiments in a paticular paper, please see the corresponding directory 
 * [Learning from Executions for Semantic Parsing](experiments/semi_sup/)
 * [Learning to Synthesize Data for Semantic Parsing](experiments/sql2nl/)
 * [Meta-Learning to Compositionally Generalize](experiments/comp_maml)
+* [Structured Reordering for Modeling Latent Alignments in Sequence Transduction](experiments/permutation)
 
 ## Citations
 
@@ -118,6 +119,7 @@ If you use tensor2struct, please cite one of the following papers.
     pages = "3322--3335",
 }
 ```
+* [Structured Reordering for Modeling Latent Alignments in Sequence Transduction](https://arxiv.org/abs/2106.03257)
 
 ## Acknowledgement
 
