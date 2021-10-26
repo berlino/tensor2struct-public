@@ -20,8 +20,7 @@ conda activate tensor2struct
 ```
 
 [wandb](https://www.wandb.com/) is used for logging. To enable it you can create your own account and `wandb login` to enable logging.
-Or you could just `wandb off` to only allow dryrun locally.
-
+Or you could just `wandb off` to only allow for dryrun locally.
 
 In general, the raw data is expected to be placed under "/data/TASK\_NAME/raw" where TASK\_NAME could be spider/ssp/overnight.
 
@@ -30,7 +29,7 @@ Make `log/` and `ie_dir/` which will be used for storing checkpoints and predict
 
 ##  Experiments
 
-To run experiments in a paticular paper, please see the corresponding directory listed below for detailed instructions. 
+Tensor2struct has been the backbone architecture for implementing new models, objectives, algorithms proposed in the following papers. To reproduce experiments from a paticular paper, the corresponding link below will take to detailed instructions. 
 
 * [Meta-Learning for Domain Generalization](experiments/spider_dg/)
 * [Learning from Executions for Semantic Parsing](experiments/semi_sup/)
@@ -119,7 +118,7 @@ If you use tensor2struct, please cite one of the following papers.
     pages = "3322--3335",
 }
 ```
-* [Structured Reordering for Modeling Latent Alignments in Sequence Transduction](https://arxiv.org/abs/2106.03257)
+* [Structured Reordering for Modeling Latent Alignments in Sequence Transduction, NeurIPS 2021](https://arxiv.org/abs/2106.03257)
 
 ## Acknowledgement
 
