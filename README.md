@@ -76,6 +76,7 @@ If you use tensor2struct, please cite one of the following papers.
   <summary>
   bibtex
   </summary>
+  
 ``` bibtex
 @inproceedings{wang-etal-2021-learning-executions,
     title = "Learning from Executions for Semantic Parsing",
@@ -92,6 +93,7 @@ If you use tensor2struct, please cite one of the following papers.
     pages = "2747--2759",
 }
 ```
+  
 </details>
 
 * [Learning to Synthesize Data for Semantic Parsing, NAACL 2021](https://arxiv.org/abs/2104.05827)
@@ -118,6 +120,7 @@ If you use tensor2struct, please cite one of the following papers.
     pages = "2760--2766",
 }
 ```
+  
 </details>
 
 
@@ -127,6 +130,7 @@ If you use tensor2struct, please cite one of the following papers.
   <summary>
   bibtex
   </summary>
+  
 ``` bibtex
 @inproceedings{conklin-etal-2021-meta,
     title = "Meta-Learning to Compositionally Generalize",
@@ -144,6 +148,7 @@ If you use tensor2struct, please cite one of the following papers.
     pages = "3322--3335",
 }
 ```
+  
 </details>
 
 * [Structured Reordering for Modeling Latent Alignments in Sequence Transduction, NeurIPS 2021](https://arxiv.org/abs/2106.03257)
