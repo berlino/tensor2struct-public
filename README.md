@@ -41,8 +41,14 @@ Tensor2struct has been the backbone architecture for implementing new models, ob
 
 If you use tensor2struct, please cite one of the following papers.
 
+
 * [Meta-Learning for Domain Generalization in Semantic Parsing, NAACL 2021](https://arxiv.org/abs/2010.11988)
 
+<details>
+  <summary>
+  bibtex
+  </summary>
+  
 ``` bibtex
 @inproceedings{wang-etal-2021-meta,
     title = "Meta-Learning for Domain Generalization in Semantic Parsing",
@@ -59,9 +65,17 @@ If you use tensor2struct, please cite one of the following papers.
     pages = "366--379",
 }
 ```
+  
+</details>
+
+
 
 * [Learning from Executions for Semantic Parsing, NAACL 2021](https://arxiv.org/abs/2104.05819)
 
+<details>
+  <summary>
+  bibtex
+  </summary>
 ``` bibtex
 @inproceedings{wang-etal-2021-learning-executions,
     title = "Learning from Executions for Semantic Parsing",
@@ -78,8 +92,14 @@ If you use tensor2struct, please cite one of the following papers.
     pages = "2747--2759",
 }
 ```
+</details>
 
 * [Learning to Synthesize Data for Semantic Parsing, NAACL 2021](https://arxiv.org/abs/2104.05827)
+
+<details>
+  <summary>
+  bibtex
+  </summary>
 
 ``` bibtex
 @inproceedings{wang-etal-2021-learning-synthesize,
@@ -98,9 +118,15 @@ If you use tensor2struct, please cite one of the following papers.
     pages = "2760--2766",
 }
 ```
+</details>
+
 
 * [Meta-Learning to Compositionally Generalize, ACL 2021](https://arxiv.org/abs/2106.04252)
 
+<details>
+  <summary>
+  bibtex
+  </summary>
 ``` bibtex
 @inproceedings{conklin-etal-2021-meta,
     title = "Meta-Learning to Compositionally Generalize",
@@ -118,7 +144,27 @@ If you use tensor2struct, please cite one of the following papers.
     pages = "3322--3335",
 }
 ```
+</details>
+
 * [Structured Reordering for Modeling Latent Alignments in Sequence Transduction, NeurIPS 2021](https://arxiv.org/abs/2106.03257)
+
+<details>
+  <summary>
+  bibtex
+  </summary>
+
+``` bibtex
+@inproceedings{
+wang2021structured,
+title={Structured Reordering for Modeling Latent Alignments in Sequence Transduction},
+author={bailin wang and Mirella Lapata and Ivan Titov},
+booktitle={Thirty-Fifth Conference on Neural Information Processing Systems},
+year={2021},
+url={https://openreview.net/forum?id=X2Cxixkcpx}
+}
+```
+
+</details>
 
 ## Acknowledgement
 
