@@ -97,6 +97,10 @@ class DBScheduler(DataScheduler):
         else:
             self.db_list = list(self.iterators_by_db.keys())
         logger.info(f"{len(self.db_list)} dbs loaded for training")
+
+        if self.use_similarity:
+                self.sp_nlp = spacy.load("en_core_web_md")
+                self.db_similarity = self._compute_cached_sim_matrix()
         self._task_generator = self._yield_tasks_by_id()
 
     def obtain_large_db(self):
@@ -111,15 +115,32 @@ class DBScheduler(DataScheduler):
         logger.info(f"Detected large dbs: {large_db_set}")
         return large_db_set
 
-    def compute_sim(self, db1, db2):
-        db1 = db1.replace("_", " ")
-        db2 = db2.replace("_", " ")
+    def _compute_cached_sim_matrix(self):
+        """
+        Pre-compute the similarity matrix for faster batch loading
+        """
         if self.sp_nlp is None:
             self.sp_nlp = spacy.load("en_core_web_md")
-        v1 = self.sp_nlp(db1)
-        v2 = self.sp_nlp(db2)
-        sim = v1.similarity(v2)
-        return sim
+        logger.info("Pre-computing the Database similarities")
+        dbs = self.db_list
+        db_sim = {}
+        for db1 in dbs:
+            other_dbs = self.deepcopy(self.db_list)
+            other_dbs.remove(db1)
+            db1_ = db1.replace("_", " ")
+            db1_sim = {}
+            for db2 in other_dbs:
+                db2_ = db2.replace("_", " ")
+                v1 = self.sp_nlp(db1_)
+                v2 = self.sp_nlp(db2_)
+                db1_sim[db2] = v1.similarity(v2)
+
+            db_sim[db1] = db1_sim
+
+        return db_sim
+
+    def compute_sim(self, db1, db2):
+        return self.db_similarity[db1][db2]
 
     def _yield_tasks_by_id(self):
         id2iterators = self.iterators_by_db
