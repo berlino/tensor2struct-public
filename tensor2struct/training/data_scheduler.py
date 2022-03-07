@@ -5,6 +5,7 @@ import torch
 import itertools
 import logging
 import abc
+from collections import deepcopy
 
 from tensor2struct.utils import registry
 from tensor2struct.training import spider_eval
@@ -125,7 +126,7 @@ class DBScheduler(DataScheduler):
         dbs = self.db_list
         db_sim = {}
         for db1 in dbs:
-            other_dbs = self.deepcopy(self.db_list)
+            other_dbs = deepcopy(self.db_list)
             other_dbs.remove(db1)
             db1_ = db1.replace("_", " ")
             db1_sim = {}
