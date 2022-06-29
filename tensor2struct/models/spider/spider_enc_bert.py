@@ -81,6 +81,9 @@ class SpiderEncoderBertPreproc(abstract_preproc.AbstractPreproc):
             + sum(len(c.name) for c in item.schema.columns)
             + sum(len(t.name) for t in item.schema.tables)
         )
+        if "phobert" in self.tokenizer_config and num_words > 258:
+            logger.info(f"Found long seq in {item.schema.db_id}")
+            return False, None
         if num_words > 512:
             logger.info(f"Found long seq in {item.schema.db_id}")
             return False, None
@@ -201,6 +204,7 @@ class SpiderEncoderBert(torch.nn.Module):
         super().__init__()
         self._device = device
         self.preproc = preproc
+        self.bert_version = bert_version
         self.bert_token_type = bert_token_type
         self.base_enc_hidden_size = (
             1024 if "large" in bert_version else 768
@@ -270,6 +274,10 @@ class SpiderEncoderBert(torch.nn.Module):
                 qs + [c for col in cols for c in col] + [t for tab in tabs for t in tab]
             )
             assert self.tokenizer.check_bert_input_seq(token_list)
+            if "phobert" in self.bert_version and len(token_list) > 258:
+                long_seq_set.add(batch_idx)
+                continue
+
             if len(token_list) > 512:
                 long_seq_set.add(batch_idx)
                 continue
