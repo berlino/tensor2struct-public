@@ -1,9 +1,9 @@
-local _data_path = 'data/spider/';
+local _data_path = 'data/vi-spider/';
 local spider_base = import "spider_base_0512.libsonnet";
 
 function(args, data_path=_data_path) spider_base(args, data_path=_data_path) {
     data: {
-        local PREFIX = data_path + "raw/",
+        local PREFIX = data_path + "raw/word-level",
         local ts = if $.args.use_other_train then
             ['spider', 'others']
         else
