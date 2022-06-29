@@ -5,7 +5,7 @@ import torch
 import itertools
 import logging
 import abc
-from collections import deepcopy
+from copy import deepcopy
 
 from tensor2struct.utils import registry
 from tensor2struct.training import spider_eval
