@@ -36,7 +36,7 @@ class BERTokenizer:
         if "phobert" in version:
             vocab_path = os.path.join(vocab_dir, "vocab.txt") 
             self.tokenizer = AutoTokenizer.from_pretrained(version)
-        if version.startswith("bert") or "electra" in version:
+        elif version.startswith("bert") or "electra" in version:
             vocab_path = os.path.join(vocab_dir, "vocab.txt") 
             self.tokenizer = BertWordPieceTokenizer(vocab_path, lowercase=lowercase)
         elif version.startswith("roberta"):
@@ -46,12 +46,20 @@ class BERTokenizer:
         else:
             raise NotImplementedError
         
-        self.cls_token = self.tokenizer._parameters["cls_token"]
-        self.cls_token_id = self.tokenizer.token_to_id(self.cls_token)
-        self.sep_token = self.tokenizer._parameters["sep_token"]
-        self.sep_token_id = self.tokenizer.token_to_id(self.sep_token)
-        self.pad_token = self.tokenizer._parameters["pad_token"]
-        self.pad_token_id = self.tokenizer.token_to_id(self.pad_token)
+        if "phobert" in version:
+            self.cls_token = self.tokenizer.cls_token
+            self.cls_token_id = self.tokenizer.convert_tokens_to_ids(self.cls_token)
+            self.sep_token = self.tokenizer.sep_token
+            self.sep_token_id = self.tokenizer.convert_tokens_to_ids(self.sep_token)
+            self.pad_token = self.tokenizer.pad_token
+            self.pad_token_id = self.tokenizer.convert_tokens_to_ids(self.pad_token)
+        else:
+            self.cls_token = self.tokenizer._parameters["cls_token"]
+            self.cls_token_id = self.tokenizer.token_to_id(self.cls_token)
+            self.sep_token = self.tokenizer._parameters["sep_token"]
+            self.sep_token_id = self.tokenizer.token_to_id(self.sep_token)
+            self.pad_token = self.tokenizer._parameters["pad_token"]
+            self.pad_token_id = self.tokenizer.token_to_id(self.pad_token)
     
     def _encode(self, input_):
         if isinstance(input_, list) or isinstance(input_, tuple):
