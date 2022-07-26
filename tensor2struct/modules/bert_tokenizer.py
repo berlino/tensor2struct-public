@@ -113,8 +113,11 @@ class BERTokenizer:
             snlp = stanza.Pipeline(lang=lang, use_gpu=True, tokenize_pretokenized=True)
             BERTokenizer.sp_nlp = StanzaLanguage(snlp)
 
-        tokens = self.tokenizer.encode(text).tokens[1:-1]
-        return self.sp_nlp([tokens])
+        if "phobert" in self.version:
+            return []
+        else:
+            tokens = self.tokenizer.encode(text).tokens[1:-1]
+            return self.sp_nlp([tokens])
 
     def check_bert_input_seq(self, toks):
         if toks[0] == self.cls_token_id and toks[-1] == self.sep_token_id:
