@@ -60,7 +60,9 @@ class BERTokenizer:
             self.sep_token_id = self.tokenizer.token_to_id(self.sep_token)
             self.pad_token = self.tokenizer._parameters["pad_token"]
             self.pad_token_id = self.tokenizer.token_to_id(self.pad_token)
-    
+
+        self.version = version 
+
     def _encode(self, input_):
         if isinstance(input_, list) or isinstance(input_, tuple):
             encodes = self.tokenizer.encode(input_, is_pretokenized=True)
@@ -93,6 +95,9 @@ class BERTokenizer:
         """
         # TODO: if text is a list, change accordingly how the offset is computed
         assert isinstance(text, str)
+        # Temporary for word level
+        if "phobert" in self.version:
+            return []
         encodes = self._encode(text)
         orig_tokens = [text[i:j] for i,j in encodes.offsets[1:-1]]
         return orig_tokens
