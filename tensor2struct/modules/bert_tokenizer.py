@@ -86,11 +86,11 @@ class BERTokenizer:
             BERTokenizer.sp_nlp = StanzaLanguage(snlp)
         encodes = self._encode(text)
         if "phobert" in self.version:
-            tokens = []
+            return []
         else:
             tokens = encodes.tokens[1:-1]
             norm_tokens = [t.lemma_ for t in self.sp_nlp([tokens])]
-        return norm_tokens
+            return norm_tokens
 
     def tokenize_with_orig(self, text):
         """
