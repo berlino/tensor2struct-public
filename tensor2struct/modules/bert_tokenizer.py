@@ -89,7 +89,7 @@ class BERTokenizer:
             tokens = []
         else:
             tokens = encodes.tokens[1:-1]
-        norm_tokens = [t.lemma_ for t in self.sp_nlp([tokens])]
+            norm_tokens = [t.lemma_ for t in self.sp_nlp([tokens])]
         return norm_tokens
 
     def tokenize_with_orig(self, text):
