@@ -266,10 +266,8 @@ class SpiderEncoderBert(torch.nn.Module):
 
         # 1) retrieve bert pre-trained embeddings
         for batch_idx, desc in enumerate(descs):
-            if "phobert" in self.bert_version:
-                 qs = self.tokenizer.text_to_ids(desc["question_text"], cls=False)
-            else:
-                qs = self.tokenizer.text_to_ids(desc["question_text"], cls=True)
+
+            qs = self.tokenizer.text_to_ids(desc["question_text"], cls=True)
             cols = [self.tokenizer.text_to_ids(c, cls=False) for c in desc["columns"]]
             tabs = [self.tokenizer.text_to_ids(t, cls=False) for t in desc["tables"]]
 
