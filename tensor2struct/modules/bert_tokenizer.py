@@ -145,6 +145,8 @@ class BERTokenizer:
         This function is primarily used convert text to bpe token ids
         """
         encs = self._encode(sent)
+        if not cls and "phobert" in self.version:
+            return encs[1:]
         if cls:
             return encs.ids
         else:
