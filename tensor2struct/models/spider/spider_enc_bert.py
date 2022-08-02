@@ -13,7 +13,7 @@ from tensor2struct.models import abstract_preproc
 from tensor2struct.utils import serialization, vocab, registry
 from tensor2struct.modules import rat, lstm, embedders, bert_tokenizer
 
-from transformers import BertModel, ElectraModel
+from transformers import BertModel, ElectraModel, AutoModel
 
 import logging
 
@@ -242,6 +242,8 @@ class SpiderEncoderBert(torch.nn.Module):
 
         if "electra" in bert_version:
             modelclass = ElectraModel
+        elif "phobert" in bert_version:
+            modelcalss = AutoModel
         elif "bert" in bert_version:
             modelclass = BertModel
         else:
@@ -266,8 +268,10 @@ class SpiderEncoderBert(torch.nn.Module):
 
         # 1) retrieve bert pre-trained embeddings
         for batch_idx, desc in enumerate(descs):
-
-            qs = self.tokenizer.text_to_ids(desc["question_text"], cls=True)
+            if "phobert" in self.bert_version:
+                qs = self.tokenizer.text_to_ids(desc["question_text"], cls=False)
+            else:
+                qs = self.tokenizer.text_to_ids(desc["question_text"], cls=True)
             cols = [self.tokenizer.text_to_ids(c, cls=False) for c in desc["columns"]]
             tabs = [self.tokenizer.text_to_ids(t, cls=False) for t in desc["tables"]]
 
