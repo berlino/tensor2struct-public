@@ -243,7 +243,7 @@ class SpiderEncoderBert(torch.nn.Module):
         if "electra" in bert_version:
             modelclass = ElectraModel
         elif "phobert" in bert_version:
-            modelcalss = AutoModel
+            modelclass = AutoModel
         elif "bert" in bert_version:
             modelclass = BertModel
         else:
