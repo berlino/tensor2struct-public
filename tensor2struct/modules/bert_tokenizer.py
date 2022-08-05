@@ -100,7 +100,7 @@ class BERTokenizer:
         assert isinstance(text, str)
         # Temporary for word level
         if "phobert" in self.version:
-            return []
+            return text.split(" ")
         encodes = self._encode(text)
         orig_tokens = [text[i:j] for i,j in encodes.offsets[1:-1]]
         return orig_tokens
