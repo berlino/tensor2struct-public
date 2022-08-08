@@ -5,7 +5,7 @@ import stanza
 from spacy_stanza import StanzaLanguage
 
 from transformers import AutoTokenizer
-from tokenizers import BertWordPieceTokenizer, ByteLevelBPETokenizer
+from tokenizers import BertWordPieceTokenizer, ByteLevelBPETokenizer, Tokenizer
 
 import logging
 
@@ -33,9 +33,8 @@ class BERTokenizer:
             lowercase = True # roberta, electra, bert-base-uncased
         else:
             lowercase = False # bert-cased
-        if "phobert" in version:
-            vocab_path = os.path.join(vocab_dir, "vocab.txt") 
-            self.tokenizer = AutoTokenizer.from_pretrained(version)
+        if "phobert" in version: 
+            self.tokenizer = Tokenizer.from_pretrained(version)
         elif version.startswith("bert") or "electra" in version:
             vocab_path = os.path.join(vocab_dir, "vocab.txt") 
             self.tokenizer = BertWordPieceTokenizer(vocab_path, lowercase=lowercase)
@@ -77,7 +76,7 @@ class BERTokenizer:
 
     def tokenize_and_lemmatize(self, text, lang="en"):
         """
-        This will be used for matching 
+        This will be used for matching  
         1) remove cls and sep
         2) lemmatize 
         """
@@ -86,7 +85,8 @@ class BERTokenizer:
             BERTokenizer.sp_nlp = StanzaLanguage(snlp)
         encodes = self._encode(text)
         if "phobert" in self.version:
-            return []
+            norm_tokens = [t.lower() for t in encodes]
+            return norm_tokens
         else:
             tokens = encodes.tokens[1:-1]
             norm_tokens = [t.lemma_ for t in self.sp_nlp([tokens])]
