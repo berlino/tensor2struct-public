@@ -35,6 +35,7 @@ class BERTokenizer:
             lowercase = False # bert-cased
         if "phobert" in version: 
             self.tokenizer = Tokenizer.from_pretrained(version)
+            self.auto_tokenizer = AutoTokenizer.from_pretrained(version)
         elif version.startswith("bert") or "electra" in version:
             vocab_path = os.path.join(vocab_dir, "vocab.txt") 
             self.tokenizer = BertWordPieceTokenizer(vocab_path, lowercase=lowercase)
@@ -46,12 +47,12 @@ class BERTokenizer:
             raise NotImplementedError
         
         if "phobert" in version:
-            self.cls_token = self.tokenizer.cls_token
-            self.cls_token_id = self.tokenizer.convert_tokens_to_ids(self.cls_token)
-            self.sep_token = self.tokenizer.sep_token
-            self.sep_token_id = self.tokenizer.convert_tokens_to_ids(self.sep_token)
-            self.pad_token = self.tokenizer.pad_token
-            self.pad_token_id = self.tokenizer.convert_tokens_to_ids(self.pad_token)
+            self.cls_token = self.auto_tokenizer.cls_token
+            self.cls_token_id = self.auto_tokenizer.convert_tokens_to_ids(self.cls_token)
+            self.sep_token = self.auto_tokenizer.sep_token
+            self.sep_token_id = self.auto_tokenizer.convert_tokens_to_ids(self.sep_token)
+            self.pad_token = self.auto_tokenizer.pad_token
+            self.pad_token_id = self.auto_tokenizer.convert_tokens_to_ids(self.pad_token)
         else:
             self.cls_token = self.tokenizer._parameters["cls_token"]
             self.cls_token_id = self.tokenizer.token_to_id(self.cls_token)
@@ -99,8 +100,6 @@ class BERTokenizer:
         # TODO: if text is a list, change accordingly how the offset is computed
         assert isinstance(text, str)
         # Temporary for word level
-        if "phobert" in self.version:
-            return text.split(" ")
         encodes = self._encode(text)
         orig_tokens = [text[i:j] for i,j in encodes.offsets[1:-1]]
         return orig_tokens
