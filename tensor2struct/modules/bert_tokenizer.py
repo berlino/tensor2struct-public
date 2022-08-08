@@ -86,7 +86,7 @@ class BERTokenizer:
             BERTokenizer.sp_nlp = StanzaLanguage(snlp)
         encodes = self._encode(text)
         if "phobert" in self.version:
-            norm_tokens = [t.lower() for t in encodes]
+            norm_tokens = [t.lower() for t in encodes.tokens[1:-1]]
             return norm_tokens
         else:
             tokens = encodes.tokens[1:-1]
