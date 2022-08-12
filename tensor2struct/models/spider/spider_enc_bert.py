@@ -280,7 +280,7 @@ class SpiderEncoderBert(torch.nn.Module):
                 long_seq_set.add(batch_idx)
                 continue
 
-            if len(token_list) > 512:
+            elif len(token_list) > 512:
                 long_seq_set.add(batch_idx)
                 continue
 
