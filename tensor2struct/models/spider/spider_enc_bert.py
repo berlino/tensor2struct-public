@@ -447,7 +447,7 @@ class SpiderEncoderBert(torch.nn.Module):
         Since bert cannot handle sequence longer than 512, each column/table is encoded individually
         The representation of a column/table is the vector of the first token [CLS]
         """
-        qs = self.pad_single_sentence_for_bert(desc['question'], cls=True)
+        qs = self.pad_single_sentence_for_bert(desc['question_text'], cls=True)
         cols = [self.pad_single_sentence_for_bert(c, cls=True) for c in desc['columns']]
         tabs = [self.pad_single_sentence_for_bert(t, cls=True) for t in desc['tables']]
 
