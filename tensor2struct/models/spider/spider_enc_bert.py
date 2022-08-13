@@ -359,27 +359,30 @@ class SpiderEncoderBert(torch.nn.Module):
         result = []
         for batch_idx, desc in enumerate(descs):
             # retrieve representations
-            bert_batch_idx = batch_id_map[batch_idx]
-            q_enc = enc_output[bert_batch_idx][
-                batch_id_to_retrieve_question[bert_batch_idx]
-            ]
-            col_enc = enc_output[bert_batch_idx][
-                batch_id_to_retrieve_column[bert_batch_idx]
-            ]
-            tab_enc = enc_output[bert_batch_idx][
-                batch_id_to_retrieve_table[bert_batch_idx]
-            ]
-
-            if self.summarize_header == "avg":
-                col_enc_2 = enc_output[bert_batch_idx][
-                    batch_id_to_retrieve_column_2[bert_batch_idx]
+            if batch_idx in long_seq_set:
+                q_enc, col_enc, tab_enc = self.encoder_long_seq(desc) 
+            else:
+                bert_batch_idx = batch_id_map[batch_idx]
+                q_enc = enc_output[bert_batch_idx][
+                    batch_id_to_retrieve_question[bert_batch_idx]
                 ]
-                tab_enc_2 = enc_output[bert_batch_idx][
-                    batch_id_to_retrieve_table_2[bert_batch_idx]
+                col_enc = enc_output[bert_batch_idx][
+                    batch_id_to_retrieve_column[bert_batch_idx]
+                ]
+                tab_enc = enc_output[bert_batch_idx][
+                    batch_id_to_retrieve_table[bert_batch_idx]
                 ]
 
-                col_enc = (col_enc + col_enc_2) / 2.0  # avg of first and last token
-                tab_enc = (tab_enc + tab_enc_2) / 2.0  # avg of first and last token
+                if self.summarize_header == "avg":
+                    col_enc_2 = enc_output[bert_batch_idx][
+                        batch_id_to_retrieve_column_2[bert_batch_idx]
+                    ]
+                    tab_enc_2 = enc_output[bert_batch_idx][
+                        batch_id_to_retrieve_table_2[bert_batch_idx]
+                    ]
+
+                    col_enc = (col_enc + col_enc_2) / 2.0  # avg of first and last token
+                    tab_enc = (tab_enc + tab_enc_2) / 2.0  # avg of first and last token
 
             words_for_copying = desc["question_for_copying"]
             assert q_enc.size()[0] == len(words_for_copying)
@@ -438,3 +441,18 @@ class SpiderEncoderBert(torch.nn.Module):
                 )
             )
         return result
+
+    @DeprecationWarning
+    def encoder_long_seq(self, desc):
+        """
+        Since bert cannot handle sequence longer than 512, each column/table is encoded individually
+        The representation of a column/table is the vector of the first token [CLS]
+        """
+        qs = self.pad_single_sentence_for_bert(desc['question'], cls=True)
+        cols = [self.pad_single_sentence_for_bert(c, cls=True) for c in desc['columns']]
+        tabs = [self.pad_single_sentence_for_bert(t, cls=True) for t in desc['tables']]
+
+        enc_q = self._bert_encode(qs)
+        enc_col = self._bert_encode(cols)
+        enc_tab = self._bert_encode(tabs)
+        return enc_q, enc_col, enc_tab
