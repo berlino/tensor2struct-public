@@ -353,7 +353,7 @@ class SpiderEncoderBert(torch.nn.Module):
             {i: [i] for i in range(len(desc["tables"]))} for desc in descs
         ]
 
-        assert len(long_seq_set) == 0  # remove them for now
+        # assert len(long_seq_set) == 0  # remove them for now
 
         # 2) rat update
         result = []
@@ -442,7 +442,6 @@ class SpiderEncoderBert(torch.nn.Module):
             )
         return result
 
-    @DeprecationWarning
     def encoder_long_seq(self, desc):
         """
         Since bert cannot handle sequence longer than 512, each column/table is encoded individually
@@ -456,3 +455,9 @@ class SpiderEncoderBert(torch.nn.Module):
         enc_col = self._bert_encode(cols)
         enc_tab = self._bert_encode(tabs)
         return enc_q, enc_col, enc_tab
+
+    def pad_single_sentence_for_bert(self, toks, cls=True):
+        if cls:
+            return [self.tokenizer.cls_token] + toks + [self.tokenizer.sep_token]
+        else:
+            return toks + [self.tokenizer.sep_token]
