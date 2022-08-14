@@ -324,27 +324,28 @@ class SpiderEncoderBert(torch.nn.Module):
 
             batch_id_map[batch_idx] = len(batch_id_map)
 
-        (
-            padded_token_lists,
-            att_mask_lists,
-            tok_type_lists,
-        ) = self.tokenizer.pad_sequence_for_bert_batch(batch_token_lists)
-        tokens_tensor = torch.LongTensor(padded_token_lists).to(self._device)
-        att_masks_tensor = torch.LongTensor(att_mask_lists).to(self._device)
+        if len(long_seq_set) == 0:
+            (
+                padded_token_lists,
+                att_mask_lists,
+                tok_type_lists,
+            ) = self.tokenizer.pad_sequence_for_bert_batch(batch_token_lists)
+            tokens_tensor = torch.LongTensor(padded_token_lists).to(self._device)
+            att_masks_tensor = torch.LongTensor(att_mask_lists).to(self._device)
 
-        if self.bert_token_type:
-            tok_type_tensor = torch.LongTensor(tok_type_lists).to(self._device)
-            bert_output = self.bert_model(
-                tokens_tensor,
-                attention_mask=att_masks_tensor,
-                token_type_ids=tok_type_tensor,
-            )[0]
-        else:
-            bert_output = self.bert_model(
-                tokens_tensor, attention_mask=att_masks_tensor
-            )[0]
+            if self.bert_token_type:
+                tok_type_tensor = torch.LongTensor(tok_type_lists).to(self._device)
+                bert_output = self.bert_model(
+                    tokens_tensor,
+                    attention_mask=att_masks_tensor,
+                    token_type_ids=tok_type_tensor,
+                )[0]
+            else:
+                bert_output = self.bert_model(
+                    tokens_tensor, attention_mask=att_masks_tensor
+                )[0]
 
-        enc_output = bert_output
+            enc_output = bert_output
 
         column_pointer_maps = [
             {i: [i] for i in range(len(desc["columns"]))} for desc in descs
