@@ -268,9 +268,9 @@ class SpiderEncoderBert(torch.nn.Module):
 
         # 1) retrieve bert pre-trained embeddings
         for batch_idx, desc in enumerate(descs):
-            qs = self.tokenizer.text_to_ids(desc["question_text"], cls=True).ids
-            cols = [self.tokenizer.text_to_ids(c, cls=False).ids for c in desc["columns"]]
-            tabs = [self.tokenizer.text_to_ids(t, cls=False).ids for t in desc["tables"]]
+            qs = self.tokenizer.text_to_ids(desc["question_text"], cls=True)
+            cols = [self.tokenizer.text_to_ids(c, cls=False) for c in desc["columns"]]
+            tabs = [self.tokenizer.text_to_ids(t, cls=False) for t in desc["tables"]]
 
             token_list = (
                 qs + [c for col in cols for c in col] + [t for tab in tabs for t in tab]
@@ -441,15 +441,33 @@ class SpiderEncoderBert(torch.nn.Module):
                 )
             )
         return result
+    
+    def _bert_encode(self, toks):
+        if not isinstance(toks[0], list):  # encode question words
+            indexed_tokens = self.tokenizer.convert_tokens_to_ids(toks)
+            tokens_tensor = torch.tensor([indexed_tokens]).to(self._device)
+            outputs = self.bert_model(tokens_tensor)
+            return outputs[0][0, 1:-1]  # remove [CLS] and [SEP]
+        else:
+            max_len = max([len(it) for it in toks])
+            tok_ids = []
+            for item_toks in toks:
+                item_toks = item_toks + [self.tokenizer.pad_token] * (max_len - len(item_toks))
+                indexed_tokens = self.tokenizer.convert_tokens_to_ids(item_toks)
+                tok_ids.append(indexed_tokens)
+
+            tokens_tensor = torch.tensor(tok_ids).to(self._device)
+            outputs = self.bert_model(tokens_tensor)
+            return outputs[0][:, 0, :]
 
     def encoder_long_seq(self, desc):
         """
         Since bert cannot handle sequence longer than 512, each column/table is encoded individually
         The representation of a column/table is the vector of the first token [CLS]
         """
-        qs = self.tokenizer.pad_single_sentence_for_bert(desc['question_text'], cls=True)
-        cols = [self.tokenizer.pad_single_sentence_for_bert(c, cls=True) for c in desc['columns']]
-        tabs = [self.tokenizer.pad_single_sentence_for_bert(t, cls=True) for t in desc['tables']]
+        qs = self.tokenizer.text_to_ids(desc['question_text'], cls=True)
+        cols = [self.tokenizer.text_to_ids(c, cls=True) for c in desc['columns']]
+        tabs = [self.tokenizer.text_to_ids(t, cls=True) for t in desc['tables']]
 
         enc_q = self._bert_encode(qs)
         enc_col = self._bert_encode(cols)
