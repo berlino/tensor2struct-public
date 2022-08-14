@@ -177,3 +177,9 @@ class BERTokenizer:
             )
             tok_type_lists.append(_tok_type_list)
         return toks_ids, att_masks, tok_type_lists
+
+    def pad_single_sentence_for_bert(self, toks, cls=True):
+        if cls:
+            return [self.auto_tokenizer.cls_token] + toks + [self.auto_tokenizer.sep_token]
+        else:
+            return toks + [self.auto_tokenizer.sep_token]
