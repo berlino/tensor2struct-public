@@ -250,7 +250,6 @@ class SpiderEncoderBert(torch.nn.Module):
             raise NotImplementedError
         self.bert_model = modelclass.from_pretrained(bert_version)
         self.tokenizer = self.preproc.tokenizer
-        self.auto_tokenizer = self.preproc.auto_tokenizer
         # self.bert_model.resize_token_embeddings(
         #    len(self.tokenizer)
         # )  # several tokens added
