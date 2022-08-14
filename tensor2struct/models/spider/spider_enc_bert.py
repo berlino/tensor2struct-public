@@ -442,19 +442,17 @@ class SpiderEncoderBert(torch.nn.Module):
             )
         return result
     
-    def _bert_encode(self, toks):
-        if not isinstance(toks[0], list):  # encode question words
-            indexed_tokens = self.tokenizer.convert_tokens_to_ids(toks)
-            tokens_tensor = torch.tensor([indexed_tokens]).to(self._device)
+    def _bert_encode(self, ids):
+        if not isinstance(ids[0], list):  # encode question words
+            tokens_tensor = torch.tensor([ids]).to(self._device)
             outputs = self.bert_model(tokens_tensor)
             return outputs[0][0, 1:-1]  # remove [CLS] and [SEP]
         else:
-            max_len = max([len(it) for it in toks])
+            max_len = max([len(it) for it in ids])
             tok_ids = []
-            for item_toks in toks:
-                item_toks = item_toks + [self.tokenizer.pad_token] * (max_len - len(item_toks))
-                indexed_tokens = self.tokenizer.convert_tokens_to_ids(item_toks)
-                tok_ids.append(indexed_tokens)
+            for item_ids in ids:
+                item_ids = item_ids + [self.tokenizer.pad_token_id] * (max_len - len(item_ids))
+                tok_ids.append(item_ids)
 
             tokens_tensor = torch.tensor(tok_ids).to(self._device)
             outputs = self.bert_model(tokens_tensor)
