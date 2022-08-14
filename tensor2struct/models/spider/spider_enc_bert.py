@@ -324,7 +324,7 @@ class SpiderEncoderBert(torch.nn.Module):
 
             batch_id_map[batch_idx] = len(batch_id_map)
 
-        if len(long_seq_set) == 0:
+        if len(long_seq_set) < len(descs):
             (
                 padded_token_lists,
                 att_mask_lists,
