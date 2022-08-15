@@ -20,6 +20,12 @@ function(args, data_path=_data_path) spider_base(args, data_path=_data_path) {
             tables_paths: [PREFIX + 'tables.json'],
             db_path: PREFIX + 'database',
         },
+        test: {
+            name: 'spider',
+            paths: [PREFIX + 'test.json'],
+            tables_paths: [PREFIX + 'tables.json'],
+            db_path: PREFIX + 'database',
+        }
 
     },
     model+:{
