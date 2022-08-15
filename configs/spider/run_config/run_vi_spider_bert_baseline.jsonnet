@@ -9,8 +9,8 @@
 
         # model
         num_layers: 6,
-        sc_link: true,
-        cv_link: true,
+        sc_link: false,
+        cv_link: false,
         loss_type: "softmax", # softmax, label_smooth
 
         # bert
@@ -24,13 +24,13 @@
         include_literals: true,
 
         # training
-        bs: 1,
+        bs: 2,
         att: 0,
         lr: 5e-4,
         clip_grad: 0.3,
         num_batch_accumulated: 1,
-        max_steps: 20000,
-        save_threshold: 19000,
+        max_steps: 1000,
+        save_threshold: 900,
         use_bert_training: true,
         device: "cuda:0",
     },
