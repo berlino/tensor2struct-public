@@ -137,12 +137,21 @@ class Inferer:
                             "beams": decoded,
                             "orig_item": attr.asdict(orig_item),
                             "preproc_item": preproc_item[0],
-                        }
-                    )
+                        },
+                        ensure_ascii=False
+                    ).encode("utf8")
                     + "\n"
                 )
             else:
-                output.write(json.dumps({"index": i, "beams": decoded}) + "\n")
+                output.write(
+                    json.dumps(
+                        {
+                            "index": i,
+                            "beams": decoded
+                        }, 
+                        ensure_ascii=False
+                    ).encode("utf8")
+                     + "\n")
             output.flush()
 
 
@@ -179,7 +188,7 @@ def setup(args):
     output_path = args.output.replace("__LOGDIR__", args.logdir)
     dir_name = os.path.dirname(output_path)
     if not os.path.exists(dir_name):
-        os.mkdir(dir_name)
+        os.makedirs(dir_name)
     if os.path.exists(output_path):
         print("WARNING Output file {} already exists".format(output_path))
         # sys.exit(1)
