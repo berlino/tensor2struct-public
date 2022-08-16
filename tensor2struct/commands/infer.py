@@ -61,7 +61,7 @@ class Inferer:
         return model
 
     def infer(self, model, output_path, args):
-        output = open(output_path, "w")
+        output = open(output_path, "w", encoding='utf8')
 
         infer_func = registry.lookup("infer_method", args.method)
         with torch.no_grad():
@@ -143,13 +143,15 @@ class Inferer:
                     + "\n"
                 )
             else:
-                with open(output, "w", encoding="utf8"):
+                output.write(
                     json.dumps(
                         {
                             "index": i,
                             "beams": decoded
-                        },
-                    ) + "\n"
+                        }
+                    )
+                     + "\n")
+            output.flush()
 
 
 def add_parser():
