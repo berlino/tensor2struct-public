@@ -148,9 +148,10 @@ class Inferer:
                         {
                             "index": i,
                             "beams": decoded
-                        }
-                    )
-                     + "\n")
+                        },
+                        ensure_ascii=False
+                    ).encode('utf8'))
+                output.write("\n")
             output.flush()
 
 
