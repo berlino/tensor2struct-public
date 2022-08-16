@@ -143,16 +143,13 @@ class Inferer:
                     + "\n"
                 )
             else:
-                output.write(
+                with open(output, "w", encoding="utf8"):
                     json.dumps(
                         {
                             "index": i,
                             "beams": decoded
-                        }, 
-                        ensure_ascii=False
-                    ).encode("utf8")
-                     + "\n")
-            output.flush()
+                        },
+                    ) + "\n"
 
 
 def add_parser():
