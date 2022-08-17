@@ -116,16 +116,18 @@ def get_schema_from_tables_file(fpath):
     with open(fpath) as f:
         data = json.load(f)
         
-    schema = {}
+    schemas = {}
     for entry in data:
+        schema = {}
         for idx, table in enumerate(entry["table_names"]):
             table_cols = [
                 col[1].lower() 
                 for col in entry["column_names"][1:]
                 if col[0] == idx]
             schema[table] = table_cols
-    
-    return schema
+        schemas[entry["db_id"]] = schema
+
+    return schemas
 
 def tokenize(string):
     string = str(string)

@@ -365,13 +365,14 @@ class Evaluator:
         self.etype = etype
 
         self.db_paths = {}
-        self.schemas = {}
+        _tables_path = os.path.join(os.path.dirname(db_dir), "tables.json")
+        self.schemas = get_schema_from_tables_file(_tables_path)
         for db_name in self.kmaps.keys():
             db_path = os.path.join(db_dir, db_name, db_name + '.sqlite')
             self.db_paths[db_name] = db_path
             # self.schemas[db_name] = Schema(get_schema(db_path))
-        tables_path = os.path.join(os.path.dirname(db_dir), "tables.json")
-        self.schemas[db_name] = Schema(get_schema_from_tables_file(tables_path))
+            self.schemas[db_name] = Schema(self.schemas[db_name])
+        
         self.scores = {
             level: {
                 'count': 0,
