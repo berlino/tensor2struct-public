@@ -370,7 +370,7 @@ class Evaluator:
             db_path = os.path.join(db_dir, db_name, db_name + '.sqlite')
             self.db_paths[db_name] = db_path
             # self.schemas[db_name] = Schema(get_schema(db_path))
-        tables_path = os.path.join(os.path.dirname(db_dir, "tables.json"))
+        tables_path = os.path.join(os.path.dirname(db_dir), "tables.json")
         self.schemas[db_name] = Schema(get_schema_from_tables_file(tables_path))
         self.scores = {
             level: {
