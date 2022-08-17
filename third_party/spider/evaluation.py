@@ -25,7 +25,7 @@ import sqlite3
 import traceback
 import argparse
 
-from third_party.spider.process_sql import tokenize, get_schema, get_tables_with_alias, Schema, get_sql
+from third_party.spider.process_sql import tokenize, get_schema, get_tables_with_alias, Schema, get_sql, get_schema_from_tables_file
 
 # Flag to disable value evaluation
 DISABLE_VALUE = True
@@ -369,8 +369,9 @@ class Evaluator:
         for db_name in self.kmaps.keys():
             db_path = os.path.join(db_dir, db_name, db_name + '.sqlite')
             self.db_paths[db_name] = db_path
-            self.schemas[db_name] = Schema(get_schema(db_path))
-
+            # self.schemas[db_name] = Schema(get_schema(db_path))
+        tables_path = os.path.join(os.path.dirname(db_dir, "tables.json"))
+        self.schemas[db_name] = Schema(get_schema_from_tables_file(tables_path))
         self.scores = {
             level: {
                 'count': 0,
