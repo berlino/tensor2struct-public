@@ -192,7 +192,7 @@ class SpiderDataset(dataset.Dataset):
             # if all failed
             if ret_dict is None:
                 ret_dict = self.evaluator.evaluate_one(
-                    item.schema.db_id, item.orig["query"], inferred_codes[0]
+                    item.schema.db_id, query_toks_w, inferred_codes[0]
                 )
 
             if orig_question:
