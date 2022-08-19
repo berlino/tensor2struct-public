@@ -27,7 +27,7 @@ class Dataset(object):
  # add eval_col_name field, which replace space in column names by "_"
 def add_underscore(text):
     assert isinstance(text, str)
-    if text[0] == "\\":
+    if text[0] != "\\":
         return "_".join(text.split(" "))
     else:
         return text
