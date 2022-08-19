@@ -175,10 +175,17 @@ class SpiderDataset(dataset.Dataset):
 
         def add_beams(self, item, inferred_codes, orig_question=None):
             ret_dict = None
+            # switch to name with underscore
+            query_toks_w = [dataset.add_underscore(tok) for tok in item.orig["query_toks"]]
             for i, code in enumerate(inferred_codes):
+                # if self.evaluator.isValidSQL(code, item.schema.db_id):
+                #     ret_dict = self.evaluator.evaluate_one(
+                #         item.schema.db_id, item.orig["query"], code
+                #     )
+                #     break
                 if self.evaluator.isValidSQL(code, item.schema.db_id):
                     ret_dict = self.evaluator.evaluate_one(
-                        item.schema.db_id, item.orig["query"], code
+                        item.schema.db_id, query_toks_w, code
                     )
                     break
 
