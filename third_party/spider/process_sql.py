@@ -27,6 +27,7 @@
 import json
 import sqlite3
 from nltk import word_tokenize
+from tensor2struct.utils import dataset
 
 CLAUSE_KEYWORDS = ('select', 'from', 'where', 'group', 'order', 'limit', 'intersect', 'union', 'except')
 JOIN_KEYWORDS = ('join', 'on', 'as')
@@ -121,10 +122,10 @@ def get_schema_from_tables_file(fpath):
         schema = {}
         for idx, table in enumerate(entry["table_names"]):
             table_cols = [
-                col[1].lower() 
+                dataset.add_underscore(col[1].lower()) 
                 for col in entry["column_names"][1:]
                 if col[0] == idx]
-            schema[table] = table_cols
+            schema[dataset.add_underscore(table)] = table_cols
         schemas[entry["db_id"]] = schema
 
     return schemas
@@ -564,7 +565,10 @@ def load_data(fpath):
 
 
 def get_sql(schema, query):
-    toks = tokenize(query)
+    if isinstance(query, list):
+        toks = query
+    else:
+        toks = tokenize(query)
     tables_with_alias = get_tables_with_alias(schema.schema, toks)
     _, sql = parse_sql(toks, 0, tables_with_alias, schema)
 

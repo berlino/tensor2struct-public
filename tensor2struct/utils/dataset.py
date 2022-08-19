@@ -23,3 +23,11 @@ class Dataset(object):
 
     def __add__(self, other):
         raise NotImplementedError
+
+ # add eval_col_name field, which replace space in column names by "_"
+def add_underscore(text):
+    assert isinstance(text, str)
+    if text[0] == "\\":
+        return "_".join(text.split(" "))
+    else:
+        return text

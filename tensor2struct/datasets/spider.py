@@ -55,7 +55,7 @@ def load_tables(paths):
         schema_dicts = json.load(open(path))
         for schema_dict in schema_dicts:
             tables = tuple(
-                Table(id=i, name=name.split(), unsplit_name=name, orig_name=orig_name,)
+                Table(id=i, name=name.split(), unsplit_name=name, orig_name=dataset.add_underscore(orig_name),)
                 for i, (name, orig_name) in enumerate(
                     zip(schema_dict["table_names"], schema_dict["table_names_original"])
                 )
@@ -66,7 +66,7 @@ def load_tables(paths):
                     table=tables[table_id] if table_id >= 0 else None,
                     name=col_name.split(),
                     unsplit_name=col_name,
-                    orig_name=orig_col_name,
+                    orig_name=dataset.add_underscore(orig_col_name),
                     type=col_type,
                 )
                 for i, (
@@ -160,8 +160,12 @@ class SpiderDataset(dataset.Dataset):
             self.results = []
 
         def add_one(self, item, inferred_code, orig_question=None):
+            # switch from item.orig["query"] to item.orig["query_toks"] for vietnamese sql evaluation
+            # ret_dict = self.evaluator.evaluate_one(
+            #     item.schema.db_id, item.orig["query"], inferred_code
+            # )
             ret_dict = self.evaluator.evaluate_one(
-                item.schema.db_id, item.orig["query"], inferred_code
+                item.schema.db_id, item.orig["query_toks"], inferred_code
             )
 
             if orig_question:
