@@ -9,8 +9,8 @@
 
         # model
         num_layers: 6,
-        sc_link: true,
-        cv_link: true,
+        sc_link: false,
+        cv_link: false,
         loss_type: "softmax", # softmax, label_smooth
 
         # bert
