@@ -36,7 +36,7 @@
 
         # meta train
         meta_train_opt: "sgd",
-        meta_train_lr: 1e-4,
+        meta_train_lr: 5e-4,
         num_batch_per_train: 3,
         data_scheduler: "db_scheduler",
     },
