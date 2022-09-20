@@ -165,7 +165,8 @@ class SpiderEncoderBertPreproc(abstract_preproc.AbstractPreproc):
         for section, texts in self.texts.items():
             with open(os.path.join(self.data_dir, section + ".jsonl"), "w") as f:
                 for text in texts:
-                    f.write(json.dumps(text) + "\n")
+                    f.write(json.dumps(text, ensure_ascii=False))
+                    f.write("\n")
 
     def load(self):
         # self.tokenizer = BertTokenizer.from_pretrained(self.data_dir)
