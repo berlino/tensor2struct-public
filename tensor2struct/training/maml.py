@@ -1,6 +1,7 @@
 import math
 import torch
 import torch.nn as nn
+import torch.autograd as autograd 
 import collections
 
 import copy
@@ -76,6 +77,41 @@ class ModelAgnosticMetaLearning(nn.Module):
 
         ret_dic["loss"] = final_loss.item()
         return ret_dic
+    
+    def maml_train_v2(self, inner_model, model, inner_batch, outer_batches):
+        assert model.training 
+        ret_dic = {}
+        for _step in range(self.inner_steps):
+            inner_ret_dic = inner_model(inner_batch)
+            inner_loss = inner_ret_dic["loss"]
 
-
+            self.inner_opt.zero_grad()
+            inner_loss.backward()
+            self.inner_opt.step()
+        
+        logger.info(f"Inner loss: {inner_loss.item()}")
+        for p_tgt, p_src in zip(model.parameters(),
+                                inner_model.parameters()):
+            if p_src.grad is not None:
+                p_tgt.grad.data.add_(p_src.grad.data)
+        # Compute loss on udpated inner model
+        mean_outer_loss = torch.Tensor([0.0]).to(self.device)
+        for outer_batch in outer_batches:
+            outer_ret_dict = inner_model(outer_batch)
+            mean_outer_loss += outer_ret_dict["loss"]
+        mean_outer_loss.div_(len(outer_batches))
+        logger.info(f"Outer loss: {mean_outer_loss.item()}")
+        
+        # compute gradients of outer loss
+        grad_outer = autograd.grad(mean_outer_loss, 
+                                   inner_model.parameters(),
+                                   allow_unused=True)
+        for p, g_o in zip(model.parameters(), grad_outer):
+                if g_o is not None:
+                    p.grad.data.add_(g_o.data)
+                    
+        final_loss = inner_loss + mean_outer_loss
+        ret_dic["loss"] = final_loss.item()
+        return ret_dic
+        
 MAML = ModelAgnosticMetaLearning
