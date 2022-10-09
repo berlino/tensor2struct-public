@@ -229,7 +229,7 @@ class MetaTrainerV2(train.Trainer):
             
             maml_trainer.to(self.device)
             
-            ret_dic = maml_trainer.meta_train(self.model, inner_batch, outer_batches)
+            ret_dic = maml_trainer.maml_train_v2(self.model, inner_batch, outer_batches)
             loss = ret_dic["loss"]
 
             if self.train_config.clip_grad:
