@@ -154,18 +154,51 @@ class MetaTrainerV2(train.Trainer):
 
         if self.train_config.num_batch_accumulated > 1:
             self.logger.warn("Batch accumulation is used only at MAML-step level")
-            raise NotImplementedError
+
+        if self.train_config.use_bert_training:
+            if self.train_config.clip_grad is None:
+                self.logger.info("Gradient clipping is recommended for BERT training")
 
     def load_optimizer(self, config):
         with self.init_random:
 
             # 2. Outer optimizer
-            optimizer = registry.construct(
-                "optimizer",
-                config["optimizer"],
-                params=self.model.parameters(),
-            )
+            if self.train_config.use_bert_training:
+                bert_params = self.model.get_bert_parameters()
+                non_bert_params = self.model.get_non_bert_parameters()
+                assert len(non_bert_params) + len(bert_params) == len(
+                    list(self.model.parameters())
+                )
+                assert len(bert_params) > 0
+                self.logger.info(
+                    f"{len(bert_params)} BERT parameters and {len(non_bert_params)} non-BERT parameters"
+                )
+                optimizer = registry.construct(
+                    "optimizer",
+                    config["optimizer"],
+                    non_bert_params=non_bert_params,
+                    bert_params=bert_params,
+                )
 
+                lr_scheduler = registry.construct(
+                    "lr_scheduler",
+                    config.get("lr_scheduler", {"name": "noop"}),
+                    param_groups=[
+                        optimizer.non_bert_param_group,
+                        optimizer.bert_param_group,
+                    ],
+                )
+            else:
+                optimizer = registry.construct(
+                    "optimizer",
+                    config["optimizer"],
+                    params=self.model.parameters(),
+                )
+                lr_scheduler = registry.construct(
+                    "lr_scheduler",
+                    config.get("lr_scheduler", {"name": "noop"}),
+                    param_groups=optimizer.param_groups,
+                )
             lr_scheduler = registry.construct(
                 "lr_scheduler",
                 config.get("lr_scheduler", {"name": "noop"}),
