@@ -33,7 +33,7 @@ class ModelAgnosticMetaLearning(nn.Module):
 
     def meta_train_v2(self, inner_model, model, inner_opt, inner_batch, outer_batches):
         assert not self.first_order
-        return self.maml_train(model, inner_batch, outer_batches)
+        return self.maml_train_v2(model, inner_batch, outer_batches)
 
     def maml_train(self, model, inner_batch, outer_batches):
         assert model.training
