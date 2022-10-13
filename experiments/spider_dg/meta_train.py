@@ -1,5 +1,6 @@
 import argparse
 import collections
+import copy
 import datetime
 import json
 import os
@@ -146,7 +147,7 @@ class MetaTrainer(meta_train.MetaTrainer):
             for idx, lr in enumerate(outer_lr):
                 wandb.log({f"outer_lr_{idx}": lr}, step=last_step)
 
-class MetaTrainerV2(train.Trainer):
+class MetaTrainerV2(meta_train.MetaTrainer):
     def load_train_config(self):
         self.train_config = registry.instantiate(
             MetaTrainConfig, self.config["meta_train"]
@@ -161,7 +162,14 @@ class MetaTrainerV2(train.Trainer):
 
     def load_optimizer(self, config):
         with self.init_random:
-
+            
+            # 1. MAML trainer, might add new parameters to the optimizer, e.g., step size
+            maml_trainer = maml.MAML(
+                model=self.model,
+                device=self.device,
+                first_order=self.train_config.first_order,
+            )
+            maml_trainer.to(self.device)
             # 2. Outer optimizer
             if self.train_config.use_bert_training:
                 bert_params = self.model.get_bert_parameters()
@@ -192,7 +200,7 @@ class MetaTrainerV2(train.Trainer):
                 optimizer = registry.construct(
                     "optimizer",
                     config["optimizer"],
-                    params=self.model.parameters(),
+                    params=self.model.get_trainable_parameters(),
                 )
                 lr_scheduler = registry.construct(
                     "lr_scheduler",
@@ -204,59 +212,47 @@ class MetaTrainerV2(train.Trainer):
                 config.get("lr_scheduler", {"name": "noop"}),
                 param_groups=optimizer.param_groups,
             )
-            return optimizer, lr_scheduler
-
-    def load_train_data(self):
-        with self.data_random:
-            train_data = self.model_preproc.dataset("train")
-            train_data_scheduler = registry.construct(
-                "data_scheduler",
-                self.train_config.data_scheduler,
-                examples=train_data,
-                max_train_step=self.train_config.max_steps,
-            )
-        return train_data_scheduler
+            return optimizer, lr_scheduler, maml_trainer
 
     def step(
         self,
         config,
         train_data_scheduler,
+        maml_trainer,
         optimizer,
         lr_scheduler,
         last_step,
     ):
-        task = train_data_scheduler.get_batch(last_step)
         with self.model_random:
             
-            optimizer.zero_grad()
             for p in self.model.parameters():
                 if p.grad is None:
                     p.grad = torch.zeros_like(p)
                     
-            inner_batch, outer_batches = task
-            # clone model for inner opt
-            inner_model = copy.deepcopy(self.model)
-            inner_opt = registry.construct(
-                "optimizer", self.train_config.inner_opt, params=inner_model.parameters()
-            )
-            # 1. MAML trainer, might add new parameters to the optimizer, e.g., step size
-            maml_trainer = maml.MAML(
-                model=self.model,
-                inner_opt=inner_opt,
-                device=self.device,
-                first_order=self.train_config.first_order,
-            )
-            
-            maml_trainer.to(self.device)
-            
-            ret_dic = maml_trainer.meta_train(inner_model, self.model, inner_batch, outer_batches)
-            loss = ret_dic["loss"]
+            for _i in range(self.train_config.num_batch_accumulated):
+                task = train_data_scheduler.get_batch(last_step)
+                inner_batch, outer_batches = task
+                # clone model for inner opt
+                inner_model = copy.deepcopy(self.model)
+                inner_parameters = inner_model.get_non_bert_parameters()
+                inner_opt = registry.construct(
+                    "optimizer", self.train_config.inner_opt, params=inner_parameters
+                )
+                self.logger.info(f"{len(inner_parameters)} parameters for inner update")
+                
+                ret_dic = maml_trainer.meta_train_v2(inner_model, self.model, inner_opt, inner_batch, outer_batches)
+                loss = ret_dic["loss"]
 
-            if self.train_config.clip_grad:
-                self.logger.warn("Clip grad is only designed for BERT finetune")
+            # clip bert grad
+            if self.train_config.clip_grad and self.train_config.use_bert_training:
+                for param_group in optimizer.param_groups:
+                    torch.nn.utils.clip_grad_norm_(
+                        param_group["params"], self.train_config.clip_grad,
+                    )
 
             optimizer.step()
-
+            optimizer.zero_grad()
+            
             # log lr for each step
             outer_lr = lr_scheduler.update_lr(last_step)
             if outer_lr is None:
@@ -273,41 +269,6 @@ class MetaTrainerV2(train.Trainer):
             for idx, lr in enumerate(outer_lr):
                 wandb.log({f"outer_lr_{idx}": lr}, step=last_step)
 
-    def train(self, config, modeldir):
-        optimizer, lr_scheduler = self.load_optimizer(
-            config
-        )
-        # to do: change saver config
-        saver, last_step = self.load_saver(
-            config,
-            modeldir,
-            optimizer=optimizer,
-        )
-
-        train_data_scheduler = self.load_train_data()
-        train_eval_data_loader, val_data_loader = self.load_eval_data()
-
-        # 5. Start training loop
-        with self.data_random:
-            while last_step < self.train_config.max_steps:
-                self.eval_model(last_step, train_eval_data_loader, val_data_loader)
-
-                try:
-                    self.step(
-                        config,
-                        train_data_scheduler,
-                        optimizer,
-                        lr_scheduler,
-                        last_step,
-                    )
-                    last_step += 1
-                    self.save_state(saver, modeldir, last_step)
-                except RuntimeError as e:
-                    # it seems to work for meta-train
-                    err_msg = str(e)
-                    self.logger.warn(f"Step Failed {err_msg}")
-
-            saver.save(modeldir, last_step)
 
 def main(args):
     # setup logger etc

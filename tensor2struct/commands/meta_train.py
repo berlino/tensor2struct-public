@@ -172,11 +172,18 @@ class MetaTrainerV2(train.Trainer):
     def load_optimizer(self, config):
         with self.init_random:
 
+            # 1. MAML trainer, might add new parameters to the optimizer, e.g., step size
+            maml_trainer = maml.MAML(
+                model=self.model,
+                device=self.device,
+                first_order=self.train_config.first_order,
+            )
+            maml_trainer.to(self.device)
             # 2. Outer optimizer
             optimizer = registry.construct(
                 "optimizer",
                 config["optimizer"],
-                params=self.model.parameters(),
+                params=self.model.get_trainable_parameters(),
             )
 
             lr_scheduler = registry.construct(
@@ -184,7 +191,7 @@ class MetaTrainerV2(train.Trainer):
                 config.get("lr_scheduler", {"name": "noop"}),
                 param_groups=optimizer.param_groups,
             )
-            return optimizer, lr_scheduler
+            return optimizer, lr_scheduler, maml_trainer
 
     def load_train_data(self):
         with self.data_random:
@@ -201,6 +208,7 @@ class MetaTrainerV2(train.Trainer):
         self,
         config,
         train_data_scheduler,
+        maml_trainer,
         optimizer,
         lr_scheduler,
         last_step,
@@ -208,7 +216,6 @@ class MetaTrainerV2(train.Trainer):
         task = train_data_scheduler.get_batch(last_step)
         with self.model_random:
             
-            optimizer.zero_grad()
             for p in self.model.parameters():
                 if p.grad is None:
                     p.grad = torch.zeros_like(p)
@@ -219,24 +226,15 @@ class MetaTrainerV2(train.Trainer):
             inner_opt = registry.construct(
                 "optimizer", self.train_config.inner_opt, params=inner_model.parameters()
             )
-            # 1. MAML trainer, might add new parameters to the optimizer, e.g., step size
-            maml_trainer = maml.MAML(
-                model=self.model,
-                inner_opt=inner_opt,
-                device=self.device,
-                first_order=self.train_config.first_order,
-            )
             
-            maml_trainer.to(self.device)
-            
-            ret_dic = maml_trainer.meta_train(inner_model, self.model, inner_batch, outer_batches)
+            ret_dic = maml_trainer.meta_train_v2(inner_model, self.model, inner_opt, inner_batch, outer_batches)
             loss = ret_dic["loss"]
 
             if self.train_config.clip_grad:
                 self.logger.warn("Clip grad is only designed for BERT finetune")
 
             optimizer.step()
-
+            optimizer.zero_grad()
             # log lr for each step
             outer_lr = lr_scheduler.update_lr(last_step)
             if outer_lr is None:
@@ -254,7 +252,7 @@ class MetaTrainerV2(train.Trainer):
                 wandb.log({f"outer_lr_{idx}": lr}, step=last_step)
 
     def train(self, config, modeldir):
-        optimizer, lr_scheduler = self.load_optimizer(
+        optimizer, lr_scheduler, maml_trainer = self.load_optimizer(
             config
         )
         # to do: change saver config
@@ -276,6 +274,7 @@ class MetaTrainerV2(train.Trainer):
                     self.step(
                         config,
                         train_data_scheduler,
+                        maml_trainer,
                         optimizer,
                         lr_scheduler,
                         last_step,

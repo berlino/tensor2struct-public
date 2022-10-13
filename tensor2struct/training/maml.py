@@ -27,9 +27,13 @@ class ModelAgnosticMetaLearning(nn.Module):
         """
         return []
 
-    def meta_train(self, inner_model, model, inner_batch, outer_batches):
+    def meta_train(self, model, inner_batch, outer_batches):
         assert not self.first_order
-        return self.maml_train_v2(inner_model, model, inner_batch, outer_batches)
+        return self.maml_train(model, inner_batch, outer_batches)
+
+    def meta_train_v2(self, inner_model, model, inner_opt, inner_batch, outer_batches):
+        assert not self.first_order
+        return self.maml_train(model, inner_batch, outer_batches)
 
     def maml_train(self, model, inner_batch, outer_batches):
         assert model.training
@@ -78,16 +82,16 @@ class ModelAgnosticMetaLearning(nn.Module):
         ret_dic["loss"] = final_loss.item()
         return ret_dic
     
-    def maml_train_v2(self, inner_model, model, inner_batch, outer_batches):
+    def maml_train_v2(self, inner_model, model, inner_opt, inner_batch, outer_batches):
         assert model.training 
         ret_dic = {}
         for _step in range(self.inner_steps):
             inner_ret_dic = inner_model(inner_batch)
             inner_loss = inner_ret_dic["loss"]
 
-            self.inner_opt.zero_grad()
+            inner_opt.zero_grad()
             inner_loss.backward()
-            self.inner_opt.step()
+            inner_opt.step()
         
         logger.info(f"Inner loss: {inner_loss.item()}")
         for p_tgt, p_src in zip(model.parameters(),
