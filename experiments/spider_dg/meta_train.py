@@ -147,7 +147,7 @@ class MetaTrainer(meta_train.MetaTrainer):
             for idx, lr in enumerate(outer_lr):
                 wandb.log({f"outer_lr_{idx}": lr}, step=last_step)
 
-class MetaTrainerV2(meta_train.MetaTrainer):
+class MetaTrainerV2(meta_train.MetaTrainerV2):
     def load_train_config(self):
         self.train_config = registry.instantiate(
             MetaTrainConfig, self.config["meta_train"]
