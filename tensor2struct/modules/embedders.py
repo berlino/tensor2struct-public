@@ -180,6 +180,76 @@ class TencentEmbedder(BaiduEmbedder):
 
         self.sp_nlp = None
 
+@registry.register("word_emb", "vi_phow2v_embedder")
+class PhoW2vEmbedder(Embedder):
+    def __init__(self):
+        cache = os.path.join(os.environ.get("CACHE_DIR", os.getcwd()), ".vector_cache")
+        vi_w2v_path = os.path.join(cache, "filtered_word2vec_vi_words_300dims.pkl")
+        if os.path.exists(vi_w2v_path):
+            self.id2w, self.w2id, self.vectors, self.dim = self.load_stored_vectors(
+                vi_w2v_path
+            )
+        else:
+            raw_vi_w2v_path = os.path.join(cache, "filtered_word2vec_vi_words_300dims.pkl")
+            self.id2w, self.w2id, _vectors, self.dim = self.load_vector(raw_vi_w2v_path)
+            self.vectors = torch.Tensor(_vectors)
+            self.save_vectors(vi_w2v_path)
+        
+    def load_stored_vectors(self, path):
+        with open(path, "rb") as f:
+            ret = pickle.load(f)
+        return ret
+            
+    def save_vectors(self, path):
+        with open(path, "rb") as f:
+            pickle.dump([self.id2w, self.w2id, self.vectors, self.dim], f)
+        
+    def load_vector(self, path):
+        id2w = []
+        vectors = []
+        num_words, dim = None, None
+        with open(path, encoding="utf-8", errors="ignore") as f:
+            first_line = True
+            for line in f:
+                if first_line:
+                    first_line = False
+                    items = line.rstrip().split()
+                    num_words, dim = map(int, items)
+                    continue
+                tokens = line.rstrip().split(" ")
+                _vec = np.asarray([float(x) for x in tokens[1:]])
+                vectors.append(_vec)
+                id2w.append(tokens[0])
+        assert num_words == len(vectors)
+        w2id = {v: k for k, v in enumerate(id2w)}
+        return id2w, w2id, vectors, dim
+    
+    def tokenize(self, text):
+        if self.sp_nlp is None:
+            snlp = stanza.Pipeline(lang="vi", tokenize_pretokenized=True, use_gpu=False)
+            self.sp_nlp = StanzaLanguage(snlp)
+        tokens = self.sp_nlp(text)
+        return [token.lemma_ for token in tokens]
+    
+    def tokenize_for_copying(self, text):
+        tokens = self.tokenize(text)
+        return tokens, tokens
+
+    def untokenize(self, tokens):
+        return " ".join(tokens)
+
+    def lookup(self, token):
+        if token in self.w2id:
+            ind = self.w2id[token]
+            return self.vectors[ind]
+        else:
+            return None
+
+    def contains(self, token):
+        return token in self.w2id
+    
+    def to(self, device):
+        self.vectors = self.vectors.to(device)
 
 class VanillaEmbeddings(torch.nn.Module):
     def __init__(self, device, vocab, embedder, emb_size):

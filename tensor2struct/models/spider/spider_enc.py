@@ -53,6 +53,8 @@ class SpiderEncoderV3Preproc(abstract_preproc.AbstractPreproc):
         compute_cv_link=False,
         use_ch_vocab=False,
         ch_word_emb=None,
+        use_vi_vocab=False,
+        vi_word_emb=None,
     ):
         if word_emb is None:
             self.word_emb = None
@@ -72,6 +74,8 @@ class SpiderEncoderV3Preproc(abstract_preproc.AbstractPreproc):
         self.vocab_word_freq_path = os.path.join(save_path, "enc_word_freq.json")
         self.vocab = None
         self.use_ch_vocab = use_ch_vocab
+        self.use_vi_vocab = use_vi_vocab
+        
         if use_ch_vocab:
             assert ch_word_emb is not None
             self.ch_word_emb = registry.construct("word_emb", ch_word_emb)
@@ -81,6 +85,16 @@ class SpiderEncoderV3Preproc(abstract_preproc.AbstractPreproc):
                 save_path, "ch_enc_word_freq.json"
             )
             self.ch_vocab = None
+        if use_vi_vocab:
+            assert use_ch_vocab == False and vi_word_emb is not None
+            self.vi_word_emb = registry.construct("word_emb", vi_word_emb)
+            self.vi_vocab_builder = vocab.VocabBuilder(min_freq, max_count)
+            self.vi_vocab_path = os.path.join(save_path, "vi_enc_vocab.json")
+            self.vi_vocab_word_freq_path = os.path.join(
+                save_path, "vi_enc_word_freq.json"
+            )
+            self.vi_vocab = None
+        
         self.counted_db_ids = set()
         self.relations = set()
 
@@ -120,6 +134,16 @@ class SpiderEncoderV3Preproc(abstract_preproc.AbstractPreproc):
                     )
                     if count_token:
                         self.ch_vocab_builder.add_word(token)
+                        
+            elif self.use_vi_vocab:
+                for token in q_to_count:
+                    count_token = (
+                        self.vi_word_emb is None
+                        or self.count_tokens_in_word_emb_for_vocab
+                        or self.vi_word_emb.lookup(token) is None
+                    )
+                    if count_token:
+                        self.vi_vocab_builder.add_word(token)
             else:
                 to_count = itertools.chain(to_count, q_to_count)
 
@@ -138,6 +162,10 @@ class SpiderEncoderV3Preproc(abstract_preproc.AbstractPreproc):
     def preprocess_item(self, item, validation_info):
         if self.use_ch_vocab:
             question, question_for_copying = self._ch_tokenize_for_copying(
+                item.text, item.orig["question"]
+            )
+        elif self.use_vi_vocab:
+            question, question_for_copying = self._vi_tokenize_for_copying(
                 item.text, item.orig["question"]
             )
         else:
@@ -202,6 +230,11 @@ class SpiderEncoderV3Preproc(abstract_preproc.AbstractPreproc):
         if self.ch_word_emb:
             return self.ch_word_emb.tokenize_for_copying(unsplit)
         return presplit, presplit
+    
+    def _vi_tokenize_for_copying(self, presplit, unsplit):
+        if self.vi_word_emb:
+            return self.vi_word_emb.tokenize_for_copying(unsplit)
+        return presplit, presplit
 
     def save(self):
         os.makedirs(self.data_dir, exist_ok=True)
@@ -215,6 +248,12 @@ class SpiderEncoderV3Preproc(abstract_preproc.AbstractPreproc):
             self.ch_vocab.save(self.ch_vocab_path)
             self.ch_vocab_builder.save(self.ch_vocab_word_freq_path)
 
+        if self.use_vi_vocab:
+            self.vi_vocab = self.vi_vocab_builder.finish()
+            print(f"{len(self.ch_vocab)} vietnamese words in vocab")
+            self.vi_vocab.save(self.vi_vocab_path)
+            self.vi_vocab_builder.save(self.vi_vocab_word_freq_path)
+            
         default_relations = registry.lookup(
             "context", self.context_config["name"]
         ).get_default_relations()
@@ -243,6 +282,9 @@ class SpiderEncoderV3Preproc(abstract_preproc.AbstractPreproc):
         if self.use_ch_vocab:
             self.ch_vocab = vocab.Vocab.load(self.ch_vocab_path)
             self.ch_vocab_builder.load(self.ch_vocab_word_freq_path)
+        elif self.use_vi_vocab:
+            self.vi_vocab = vocab.Vocab.load(self.vi_vocab_path)
+            self.vi_vocab_builder.load(self.vi_vocab_word_freq_path)
         with open(os.path.join(self.data_dir, "relations.json"), "r") as f:
             relations = json.load(f)
             self.relations = sorted(relations)
@@ -339,7 +381,35 @@ class SpiderEncoderV3(torch.nn.Module):
                 use_native=True,
                 summarize=False,
             )
-
+        # vietnamese vocab and module 
+        if self.preproc.use_vi_vocab:
+            self.vi_vocab = preproc.vi_vocab 
+            vi_word_freq = self.preproc.vi_vocab_builder.word_freq
+            vi_top_k_words = set(
+                [_a[0] for _a in vi_word_freq.most_common(top_k_learnable)]
+            )
+            self.vi_learnable_words = vi_top_k_words
+            shared_modules["shared-vi-emb"] = embedders.LookupEmbeddings(
+                self._device,
+                self.vi_vocab,
+                self.preproc.vi_word_emb,
+                self.preproc.vi_word_emb.dim,
+                self.vi_learnable_words
+            )
+            shared_modules["vi-bilstm"] = lstm.BiLSTM(
+                input_size=self.preproc.vi_word_emb.dim,
+                output_size=self.recurrent_size,
+                dropout=self.dropout,
+                use_native=False,
+                summarize=False
+            )
+            shared_modules["vi-bilstm-native"] = lstm.BiLSTM(
+                input_size=self.preproc.vi_word_emb.dim,
+                output_size=self.recurrent_size,
+                dropout=self.dropout,
+                use_native=True,
+                summarize=False
+            )
         self.question_encoder = self._build_modules(
             question_encoder, shared_modules=shared_modules
         )
