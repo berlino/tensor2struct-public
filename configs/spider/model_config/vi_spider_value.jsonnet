@@ -29,7 +29,7 @@ function(args, data_path=_data_path) spider_base(args, data_path=_data_path) {
 
     },
     model+:{
-        encoder: {
+        encoder+: {
             name: 'spiderv3',
             question_encoder: ['shared-vi-emb', 'bilstm-native'],
             column_encoder: ['shared-vi-emb', 'bilstm-native-summarize'],
