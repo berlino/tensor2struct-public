@@ -41,7 +41,7 @@ function(args, data_path=_data_path) spider_base(args, data_path=_data_path) {
                 enable_latent_relations: false,
             },
         },
-        encoder_preproc: {
+        encoder_preproc+: {
             word_emb: {
                 name: "vi_phow2v_embedder",
             },
