@@ -34,7 +34,7 @@ function(args, data_path=_data_path) spider_base(args, data_path=_data_path) {
             question_encoder: ['shared-vi-emb', 'bilstm-native'],
             column_encoder: ['shared-vi-emb', 'bilstm-native-summarize'],
             table_encoder: ['shared-vi-emb', 'bilstm-native-summarize'],
-            rat_config: {
+            rat_config+: {
                 name: "rat",
                 num_heads: 8,
                 num_layers: $.args.num_layers,
