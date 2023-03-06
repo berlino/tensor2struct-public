@@ -250,7 +250,7 @@ class SpiderEncoderV3Preproc(abstract_preproc.AbstractPreproc):
 
         if self.use_vi_vocab:
             self.vi_vocab = self.vi_vocab_builder.finish()
-            print(f"{len(self.ch_vocab)} vietnamese words in vocab")
+            print(f"{len(self.vi_vocab)} vietnamese words in vocab")
             self.vi_vocab.save(self.vi_vocab_path)
             self.vi_vocab_builder.save(self.vi_vocab_word_freq_path)
             
@@ -410,6 +410,7 @@ class SpiderEncoderV3(torch.nn.Module):
                 use_native=True,
                 summarize=False
             )
+            
         self.question_encoder = self._build_modules(
             question_encoder, shared_modules=shared_modules
         )
