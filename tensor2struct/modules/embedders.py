@@ -194,6 +194,8 @@ class PhoW2vEmbedder(Embedder):
             self.id2w, self.w2id, _vectors, self.dim = self.load_vector(raw_vi_w2v_path)
             self.vectors = torch.Tensor(_vectors)
             self.save_vectors(vi_w2v_path)
+            
+        self.sp_nlp = None
         
     def load_stored_vectors(self, path):
         with open(path, "rb") as f:

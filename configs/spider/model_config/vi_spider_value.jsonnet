@@ -42,6 +42,7 @@ function(args, data_path=_data_path) spider_base(args, data_path=_data_path) {
             },
         },
         encoder_preproc+: {
+            word_emb: null,
             vi_word_emb: {
                 name: "vi_phow2v_embedder",
             },
