@@ -201,7 +201,7 @@ class PhoW2vEmbedder(Embedder):
         return ret
             
     def save_vectors(self, path):
-        with open(path, "rb") as f:
+        with open(path, "wb") as f:
             pickle.dump([self.id2w, self.w2id, self.vectors, self.dim], f)
         
     def load_vector(self, path):
