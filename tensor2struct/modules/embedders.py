@@ -190,7 +190,7 @@ class PhoW2vEmbedder(Embedder):
                 vi_w2v_path
             )
         else:
-            raw_vi_w2v_path = os.path.join(cache, "filtered_word2vec_vi_words_300dims.pkl")
+            raw_vi_w2v_path = os.path.join(cache, "word2vec_vi_words_300dims.txt")
             self.id2w, self.w2id, _vectors, self.dim = self.load_vector(raw_vi_w2v_path)
             self.vectors = torch.Tensor(_vectors)
             self.save_vectors(vi_w2v_path)
