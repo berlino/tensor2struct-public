@@ -61,7 +61,7 @@ class DEMATrainer(train.Trainer):
                 optimizer = registry.construct(
                     "optimizer",
                     config["optimizer"],
-                    params=self.model.get_trainable_parameters(),
+                    params=self.model.get_non_bert_parameters(),
                 )
                 lr_scheduler = registry.construct(
                     "lr_scheduler",
@@ -84,8 +84,8 @@ class DEMATrainer(train.Trainer):
         dema_trainer,
     ):
         with self.model_random:
-            
-            for p in self.model.parameters():
+            non_bert_params = self.model.get_non_bert_parameters()
+            for p in non_bert_params:
                 if p.grad is None:
                     p.grad = torch.zeros_like(p)
             model_encoder_params = []
