@@ -2,7 +2,7 @@
     local exp_id = 0,
     project: "spider_value",
     logdir: "log/spider/bert_value_%d" %exp_id,
-    model_config: "configs/spider/model_config/vi_spider_bert_value.jsonnet",
+    model_config: "configs/spider/model_config/vi_spider_bert_value_dema.jsonnet",
     model_config_args: {
         # data 
         use_other_train: true,
@@ -14,7 +14,7 @@
         loss_type: "softmax", # softmax, label_smooth
 
         # bert
-        opt: "torchAdamw",   # bertAdamw, torchAdamw
+        opt: "adamw",   # bertAdamw, torchAdamw
         lr_scheduler: "bert_warmup_polynomial_group_v2", # bert_warmup_polynomial_group,bert_warmup_polynomial_grou_v2
         bert_token_type: false,
         bert_version: "vinai/phobert-large",
