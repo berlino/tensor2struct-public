@@ -3,6 +3,7 @@ import torch.utils.data
 
 from tensor2struct.models import abstract_preproc
 from tensor2struct.utils import registry
+from tensor2struct.modules import rat
 
 import logging
 
