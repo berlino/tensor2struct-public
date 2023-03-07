@@ -69,6 +69,29 @@ class EncDecPreproc(abstract_preproc.AbstractPreproc):
             self.enc_preproc.dataset(section), self.dec_preproc.dataset(section)
         )
 
+@attr.s
+class SpiderEncoderState:
+    state = attr.ib()
+    memory = attr.ib()
+    question_memory = attr.ib()
+    schema_memory = attr.ib()
+    words_for_copying = attr.ib()
+
+    pointer_memories = attr.ib()
+    pointer_maps = attr.ib()
+
+    m2c_align_mat = attr.ib()
+    m2t_align_mat = attr.ib()
+
+    # for copying
+    tokenizer = attr.ib()
+
+    def find_word_occurrences(self, token):
+        occurrences = [i for i, w in enumerate(self.words_for_copying) if w == token]
+        if len(occurrences) > 0:
+            return occurrences[0]
+        else:
+            return None
 
 @registry.register("model", "EncDecV2")
 class SemiBatchedEncDecModel(torch.nn.Module):
