@@ -10,7 +10,7 @@ import wandb
 import tensor2struct
 import experiments
 
-from tensor2struct.commands import preprocess, train, infer, batched_infer, eval, meta_train
+from tensor2struct.commands import preprocess, train, infer, batched_infer, eval, meta_train, dema_train
 
 
 @attr.s
@@ -32,6 +32,11 @@ class MetaTrainConfig:
     config_args = attr.ib()
     logdir = attr.ib()
 
+@attr.s
+class DEMATrainConfig:
+    config = attr.ib()
+    config_args = attr.ib()
+    logdir = attr.ib()
 
 @attr.s
 class MetaTestConfig:
@@ -230,7 +235,7 @@ def main():
         logdir = os.path.join(log_base_dir, exp_config["logdir"])
 
     # wandb init
-    if args.mode in ["train", "eval", "meta_train", "eval_only", "batched_eval"]:
+    if args.mode in ["train", "eval", "meta_train", "dema_train", "eval_only", "batched_eval"]:
         expname = exp_config["logdir"].split("/")[-1]
         project = exp_config["project"]
         wandb.init(project=project, group=expname, job_type=args.mode)
@@ -245,6 +250,9 @@ def main():
     elif args.mode == "meta_train":
         train_config = MetaTrainConfig(model_config_file, model_config_args, logdir)
         meta_train.main(train_config)
+    elif args.mode == "dema_train":
+        train_config = DEMATrainConfig(model_config_file, model_config_args, logdir)
+        dema_train.main(train_config)
     elif args.mode in ["eval", "eval_only"]:
         eval_and_report(args, exp_config, model_config_args, logdir, infer_mod=infer)
     elif args.mode == "batched_eval":
