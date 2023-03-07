@@ -154,6 +154,191 @@ class SemiBatchedEncDecModel(torch.nn.Module):
                 non_bert_params.append(_param)
         return non_bert_params
 
+@registry.register("model", "BayesEncDecV2")
+class BSemiBatchedEncDecModelV2(torch.nn.Module):
+    """
+    Bayesian Meta Learning Encoder 
+    Encoder is batched but decoder is unbatched, this is for Spider
+    """
+
+    Preproc = EncDecPreproc
+
+    def __init__(self, 
+                 preproc, 
+                 device,
+                 bert_model, 
+                 encoder, 
+                 decoder, 
+                 num_particles=2,
+                 ):
+        super().__init__()
+        self.encoder_preproc = preproc.enc_preproc
+        self.num_particles = num_particles
+        # init pretrained language mode encoder
+        self.bert_model = registry.construct(
+            "pretrainedlm", bert_model, device=device, preproc=preproc.enc_preproc
+        )
+        self.list_of_encoders = torch.nn.ModuleList()
+        for i in range(num_particles):
+            particle_encoder = registry.construct(
+                "encoder", encoder, device=device, preproc=self.encoder_preproc
+            )
+            self.list_of_encoders.append(particle_encoder)
+            
+        # initialization for encoder return state
+        # matching 
+        # todo: remember to check the linking config
+        self.schema_linking = registry.construct(
+            "schema_linking", self.list_of_encoders[0].linking_config, preproc=self.encoder_preproc, device=device,
+        )
+        
+         # aligner
+        self.aligner = rat.AlignmentWithRAT(
+            device=device,
+            hidden_size=self.list_of_encoders[0].enc_hidden_size,
+            relations2id=self.encoder_preproc.relations2id,
+            enable_latent_relations=False,
+        )
+        
+        self.decoder = registry.construct(
+            "decoder", decoder, device=device, preproc=preproc.dec_preproc
+        )
+
+        assert getattr(self.list_of_encoders[0], "batched")  # use batched enc by default
+
+    def forward(self, *input_items, compute_loss=True, infer=False):
+        """
+        The only entry point. In this unbatched version, input_items is 
+        the input_batch during training; it is a tuple (orig_item, preproc_item)
+        during inference time.
+        Args:
+            input_items: if it is a list, then we infer that it is a batch
+            of examples for training; if is not a single list, then we infer
+            that it's in inference mode
+        """
+        ret_dic = {}
+        
+        if compute_loss:
+            assert len(input_items) == 1  # it's a batched version
+            loss = self._compute_loss_enc_batched(input_items[0])
+            ret_dic["loss"] = loss
+
+        if infer:
+            assert len(input_items) == 2  # unbatched version of inference
+            orig_item, preproc_item = input_items
+            infer_dic = self.begin_inference(orig_item, preproc_item)
+            ret_dic = {**ret_dic, **infer_dic}
+        return ret_dic
+
+    def _compute_loss_enc_batched(self, batch):
+        """
+        Default way of computing loss: enc returns a list, 
+        dec process enc outputs sequentially
+        """
+        losses = []
+        enc_states = self._compute_enc_states(batch)
+        for enc_state, (enc_input, dec_output) in zip(enc_states, batch):
+            ret_dic = self.decoder(dec_output, enc_state)
+            losses.append(ret_dic["loss"])
+        return torch.mean(torch.stack(losses, dim=0), dim=0)
+
+    def _compute_enc_states(self, enc_input):
+        enc_states = []
+        column_pointer_maps = [
+            {i: [i] for i in range(len(desc["columns"]))} for desc, _ in enc_input
+        ]
+        table_pointer_maps = [
+            {i: [i] for i in range(len(desc["tables"]))} for desc, _ in enc_input
+        ]
+        plm_output = self.bert_model([enc_input for enc_input, dec_output in enc_input])
+        
+        for batch_idx, (enc_input, _) in enumerate(enc_input):
+            
+            sample_embed = plm_output[batch_idx]
+            q_particle_list = []
+            c_particle_list = []
+            t_particle_list = []
+            relation = self.schema_linking(enc_input)
+            for i in range(self.num_particles):
+                (
+                    q_enc_new_item,
+                    c_enc_new_item,
+                    t_enc_new_item,
+                ) = self.list_of_encoders[i](enc_input, sample_embed, relation)
+                q_particle_list.append(q_enc_new_item)
+                c_particle_list.append(c_enc_new_item)
+                t_particle_list.append(t_enc_new_item)
+                
+            q_enc_new_item = torch.stack(q_particle_list, dim=0).mean(dim=0)
+            c_enc_new_item = torch.stack(c_particle_list, dim=0).mean(dim=0)
+            t_enc_new_item = torch.stack(t_particle_list, dim=0).mean(dim=0)
+            
+            # attention memory 
+            memory = []
+            include_in_memory = self.list_of_encoders[0].include_in_memory
+            if "question" in include_in_memory:
+                memory.append(q_enc_new_item)
+            if "column" in include_in_memory:
+                memory.append(c_enc_new_item)
+            if "table" in include_in_memory:
+                memory.append(t_enc_new_item)
+            memory = torch.cat(memory, dim=1)
+            # alignment matrix
+            align_mat_item = self.aligner(
+                enc_input, q_enc_new_item, c_enc_new_item, t_enc_new_item, relation
+            )
+        
+            enc_states.append(
+                SpiderEncoderState(
+                    state=None,
+                    words_for_copying=enc_input["question_for_copying"],
+                    tokenizer=self.list_of_encoders[0].tokenizer,
+                    memory=memory,
+                    question_memory=q_enc_new_item,
+                    schema_memory=torch.cat((c_enc_new_item, t_enc_new_item), dim=1),
+                    pointer_memories={
+                        "column": c_enc_new_item,
+                        "table": t_enc_new_item,
+                    },
+                    pointer_maps={
+                        "column": column_pointer_maps[batch_idx],
+                        "table": table_pointer_maps[batch_idx],
+                    },
+                    m2c_align_mat=align_mat_item[0],
+                    m2t_align_mat=align_mat_item[1],
+                )
+            )
+        
+        return enc_states
+    
+    def begin_inference(self, orig_item, preproc_item):
+        enc_input, dec = preproc_item
+        (enc_state,) = self._compute_enc_states([(enc_input, dec)])
+        return self.decoder(orig_item, enc_state, compute_loss=False, infer=True)
+
+    def get_trainable_parameters(self):
+        return filter(lambda p: p.requires_grad, self.parameters())
+
+    def get_bert_parameters_legacy(self):
+        bert_params = list(self.encoder.bert_model.parameters())
+        assert len(bert_params) > 0
+        return bert_params
+
+    def get_bert_parameters(self):
+        bert_params = []
+        for name, _param in self.named_parameters():
+            if "bert" in name:
+                bert_params.append(_param)
+        return bert_params
+
+    def get_non_bert_parameters(self):
+        non_bert_params = []
+        bert_params = set(self.get_bert_parameters())
+        for name, _param in self.named_parameters():
+            if _param not in bert_params:
+                # if "bert" not in name:
+                non_bert_params.append(_param)
+        return non_bert_params
 
 @registry.register("model", "UnBatchedEncDec")
 class UnBatchedEncDecModel(torch.nn.Module):
