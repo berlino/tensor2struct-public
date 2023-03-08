@@ -15,7 +15,7 @@
 
         # bert
         opt: "adamw",   # bertAdamw, torchAdamw
-        lr_scheduler: "bert_warmup_polynomial_group_v2", # bert_warmup_polynomial_group,bert_warmup_polynomial_grou_v2
+        lr_scheduler: "warmup_polynomial", # bert_warmup_polynomial_group,bert_warmup_polynomial_grou_v2
         bert_token_type: false,
         bert_version: "vinai/phobert-large",
         bert_lr: 2e-5, 
@@ -29,10 +29,10 @@
         lr: 5e-4,
         clip_grad: 0.3,
         num_batch_accumulated: 1,
-        num_particles: 10,
+        num_particles: 5,
         max_steps: 1000,
         save_threshold: 900,
-        use_bert_training: true,
+        use_bert_training: false,
         device: "cuda:0",
     },
 
