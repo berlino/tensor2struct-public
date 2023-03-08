@@ -202,7 +202,6 @@ class DeepEnsembleModelAgnostic(nn.Module):
             # del inner_grads
             # torch.cuda.empty_cache()
             
-        logger.info(f"Inner loss: {sum(final_losses)/self.num_particles}")
         ret_dic["loss"] = sum(final_losses)/self.num_particles
         
         return ret_dic
