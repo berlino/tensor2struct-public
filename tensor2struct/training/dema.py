@@ -157,7 +157,7 @@ class DeepEnsembleModelAgnostic(nn.Module):
                     ret_dic = model.decoder(dec_output, enc_state)
                     losses.append(ret_dic["loss"])
                 loss = torch.mean(torch.stack(losses, dim=0), dim=0) / num_batch_accumulated
-                final_losses.append(loss.items())
+                final_losses.append(loss.item())
                 enc_dec_grads = torch.autograd.grad(loss, 
                                                     encoder_params[i] + aligner_params + decoder_params,
                                                     allow_unused=True)
